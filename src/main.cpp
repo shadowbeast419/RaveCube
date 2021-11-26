@@ -43,13 +43,13 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include <cstdint>
+
+#include <SettingsStructs.h>
 #include <FFT.h>
 #include <Adc1.h>
 #include <VoltageSignal.h>
 #include <UartController.h>
 #include <SettingsController.h>
-#include <SettingsStructs.h>
 #include <LedController.h>
 #include <MovingAvgFilter.h>
 #include <RaveCubeController.h>

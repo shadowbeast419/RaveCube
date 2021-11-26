@@ -8,10 +8,11 @@
 #ifndef INC_FFT_H_
 #define INC_FFT_H_
 
-#include "main.h"
 #include <arm_math.h>
-#include <VoltageSignal.h>
 #include <stdio.h>
+#include "main.h"
+#include <VoltageSignal.h>
+
 
 struct FFT_Result
 {

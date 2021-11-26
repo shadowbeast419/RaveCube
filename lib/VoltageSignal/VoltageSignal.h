@@ -8,9 +8,11 @@
 #ifndef INC_VOLTAGESIGNAL_H_
 #define INC_VOLTAGESIGNAL_H_
 
+
+#include <arm_math.h>
 #include "stm32g4xx_hal.h"
 #include "main.h"
-#include <arm_math.h>
+
 
 class VoltageSignal
 {
