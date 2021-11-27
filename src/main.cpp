@@ -93,12 +93,12 @@ int main(void)
 	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
 	HAL_Init();
 
+	/* Configure the system clock */
+	SystemClock_Config();
+
 	adc1 = Adc1::GetInstance();
 	ledCtrl = LedController::GetInstance();
 	i2c = I2CController::GetInstance();
-
-	/* Configure the system clock */
-	SystemClock_Config();
 
 	/* USER CODE BEGIN SysInit */
 	__HAL_RCC_GPIOA_CLK_ENABLE();

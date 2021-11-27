@@ -1,0 +1,2 @@
+/home/chris/RaveCube/RaveCubeFirmware/build/CMakeFiles/rebuild_cache.dir
+/home/chris/RaveCube/RaveCubeFirmware/build/CMakeFiles/edit_cache.dir

@@ -1,5 +1,10 @@
 {
-    "C_Cpp.default.intelliSenseMode": "linux-gcc-arm",
+    "C_Cpp.clang_format_style": "GNU",
+    "C_Cpp.formatting": "vcFormat",
+    "C_Cpp.intelliSenseEngineFallback": "Enabled",
+    "C_Cpp.clang_format_fallbackStyle": "GNU",
+    "cmake.sourceDirectory": "${workspaceFolder}/.",
+    "C_Cpp.default.intelliSenseMode": "linux-clang-x64",
     "C_Cpp.default.cStandard": "gnu17",
     "C_Cpp.default.cppStandard": "gnu++20"
 }
