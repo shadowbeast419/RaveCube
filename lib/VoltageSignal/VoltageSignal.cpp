@@ -5,7 +5,7 @@
  *      Author: Christoph
  */
 
-#include <VoltageSignal.h>
+#include <VoltageSignal.hpp>
 
 VoltageSignal::VoltageSignal()
 {

@@ -5,7 +5,7 @@
  *      Author: Christoph
  */
 
-#include <MovingAvgFilter.h>
+#include <MovingAvgFilter.hpp>
 
 MovingAvgFilter::MovingAvgFilter()
 {

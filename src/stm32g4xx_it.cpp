@@ -19,15 +19,15 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
-#include "stm32g4xx_it.h"
+#include <main.hpp>
+#include <stm32g4xx_it.hpp>
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "FFT.h"
-#include "Adc1.h"
-#include "LedController.h"
-#include "UartController.h"
-#include <I2CController.h>
+#include <FFT.hpp>
+#include <Adc1.hpp>
+#include <LedController.hpp>
+#include <UartController.hpp>
+#include <I2CController.hpp>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

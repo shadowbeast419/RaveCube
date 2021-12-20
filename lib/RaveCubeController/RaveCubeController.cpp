@@ -5,7 +5,7 @@
  *      Author: Christoph
  */
 
-#include <RaveCubeController.h>
+#include <RaveCubeController.hpp>
 
 RaveCubeController::RaveCubeController(LedController* ledCtrlInstance, UartController* uartCtrlInstance, SettingsController* settingCtrl)
 {

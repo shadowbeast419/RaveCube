@@ -9,7 +9,7 @@
 #define INC_PWMGENERATOR_H_
 
 #include "stm32g4xx_hal.h"
-#include <RgbLedBrightness.h>
+#include <RgbLedBrightness.hpp>
 
 class PwmGenerator
 {

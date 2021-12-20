@@ -1,5 +1,5 @@
 /*
- * MovingAvgFilter.h
+ * MovingAvgFilter.hpp
  *
  *  Created on: 5 Oct 2020
  *      Author: Christoph
@@ -8,7 +8,7 @@
 #ifndef INC_MOVINGAVGFILTER_H_
 #define INC_MOVINGAVGFILTER_H_
 
-#include <RgbLedBrightness.h>
+#include <RgbLedBrightness.hpp>
 
 #define COLOR_FILTER_ORDER_MAX 50
 

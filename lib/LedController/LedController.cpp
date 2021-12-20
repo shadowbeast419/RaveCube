@@ -5,7 +5,7 @@
  *      Author: Christoph
  */
 
-#include <LedController.h>
+#include <LedController.hpp>
 
 LedController LedController::_rgbInstance;
 

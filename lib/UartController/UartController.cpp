@@ -5,7 +5,7 @@
  *      Author: Christoph
  */
 
-#include <UartController.h>
+#include <UartController.hpp>
 
 UartController::UartController()
 {

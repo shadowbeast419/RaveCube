@@ -1,5 +1,5 @@
 /*
- * SettingsStruct.h
+ * SettingsStruct.hpp
  *
  *  Created on: Apr 11, 2021
  *      Author: Christoph
@@ -10,7 +10,7 @@
 
 #include "stm32g4xx_hal.h"
 #include <arm_math.h>
-#include <MovingAvgFilter.h>
+#include <MovingAvgFilter.hpp>
 
 struct FrequencyBoundary
 {

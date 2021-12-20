@@ -20,7 +20,7 @@
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include <main.hpp>
 /* USER CODE BEGIN Includes */
 /* USER CODE END Includes */
 extern DMA_HandleTypeDef hdma_tim1_ch1;

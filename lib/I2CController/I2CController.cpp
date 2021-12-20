@@ -5,7 +5,7 @@
  *      Author: Christoph
  */
 
-#include <I2CController.h>
+#include <I2CController.hpp>
 
 I2CController I2CController::_i2cInstance;
 

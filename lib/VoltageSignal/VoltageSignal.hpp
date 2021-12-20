@@ -11,7 +11,7 @@
 
 #include <arm_math.h>
 #include "stm32g4xx_hal.h"
-#include "main.h"
+#include <main.hpp>
 
 
 class VoltageSignal

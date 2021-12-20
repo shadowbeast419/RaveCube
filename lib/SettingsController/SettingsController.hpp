@@ -8,9 +8,9 @@
 #ifndef INC_SETTINGSCONTROLLER_H_
 #define INC_SETTINGSCONTROLLER_H_
 
-#include <I2CController.h>
+#include <I2CController.hpp>
 #include <string.h>
-#include <SettingsStructs.h>
+#include <SettingsStructs.hpp>
 
 class I2CController;
 

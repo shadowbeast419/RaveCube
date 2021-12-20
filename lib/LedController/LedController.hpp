@@ -13,14 +13,14 @@
 #define LINEAR
 #define USE_HSV
 
-#include <stm32g4xx_hal.h>
-#include <PwmGenerator.h>
-#include <RgbLedBrightness.h>
-#include <MovingAvgFilter.h>
-#include <SettingsController.h>
-#include <FFT.h>
-#include <LargeIntervalTimer.h>
-#include <SettingsStructs.h>
+#include "stm32g4xx_hal.h"
+#include <PwmGenerator.hpp>
+#include <RgbLedBrightness.hpp>
+#include <MovingAvgFilter.hpp>
+#include <SettingsController.hpp>
+#include <FFT.hpp>
+#include <LargeIntervalTimer.hpp>
+#include <SettingsStructs.hpp>
 
 const uint8_t gamma8[256] = {
 	    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,

@@ -5,7 +5,7 @@
  *      Author: Christoph
  */
 
-#include <PwmGenerator.h>
+#include <PwmGenerator.hpp>
 
 //PB6
 

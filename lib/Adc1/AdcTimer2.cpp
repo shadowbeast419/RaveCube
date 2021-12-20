@@ -5,7 +5,7 @@
  *      Author: Christoph
  */
 
-#include <AdcTimer2.h>
+#include <AdcTimer2.hpp>
 
 AdcTimer2::AdcTimer2()
 {

@@ -9,7 +9,7 @@
 #define INC_RGBLEDBRIGHTNESS_H_
 
 #include "stm32g4xx_hal.h"
-#include "main.h"
+#include <main.hpp>
 #include <arm_math.h>
 #include <stdio.h>
 

@@ -8,9 +8,9 @@
 #ifndef SRC_RAVECUBECONTROLER_H_
 #define SRC_RAVECUBECONTROLER_H_
 
-#include <LedController.h>
-#include <UartController.h>
-#include <SettingsController.h>
+#include <LedController.hpp>
+#include <UartController.hpp>
+#include <SettingsController.hpp>
 #include <cstring>
 #include <cstdio>
 

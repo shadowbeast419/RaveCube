@@ -9,10 +9,10 @@
 #define INC_I2CCONTROLLER_H_
 
 #include "stm32g4xx_hal.h"
-#include "main.h"
-#include <SettingsController.h>
+#include <main.hpp>
+#include <SettingsController.hpp>
 #include <string.h>
-#include <SettingsStructs.h>
+#include <SettingsStructs.hpp>
 
 #define TX_BUFFER_SIZE 128
 #define RX_BUFFER_SIZE 128

@@ -5,7 +5,7 @@
  *      Author: chris
  */
 
-#include <Adc1.h>
+#include <Adc1.hpp>
 
 Adc1 Adc1::_adc1Instance;
 

@@ -5,7 +5,7 @@
  *      Author: Christoph
  */
 
-#include <FFT.h>
+#include <FFT.hpp>
 
 FFT::FFT()
 {

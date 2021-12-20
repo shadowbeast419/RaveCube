@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"name": "RaveCubeFirmware",
+			"path": ".."
+		}
+	],
+	"settings": {
+		"cmake.allowCommentsInPresetsFile": true,
+		"clang.cxxflags": [
+			"-std=c++11"
+		],
+		"clang.cflags": [
+			"-std=c99"
+		],
+		"C_Cpp.clang_format_path": "clang-format"
+	}
+}

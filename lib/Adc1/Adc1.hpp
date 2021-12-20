@@ -9,8 +9,8 @@
 #define INC_ADC1_H_
 
 #include "stm32g4xx_hal.h"
-#include "main.h"
-#include <AdcTimer2.h>
+#include <main.hpp>
+#include <AdcTimer2.hpp>
 #include <stdio.h>
 #include <string.h>
 using namespace std;

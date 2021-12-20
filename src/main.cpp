@@ -1,4 +1,4 @@
-/* USER CODE BEGIN Header */
+
 /**
   ******************************************************************************
   * @file           : main.c
@@ -16,7 +16,6 @@
   *
   ******************************************************************************
   */
-/* USER CODE END Header */
 
 /*
  * I2C1
@@ -42,20 +41,18 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include <main.hpp>
+#include <SettingsStructs.hpp>
+#include <FFT.hpp>
+#include <Adc1.hpp>
+#include <VoltageSignal.hpp>
+#include <UartController.hpp>
+#include <SettingsController.hpp>
+#include <LedController.hpp>
+#include <MovingAvgFilter.hpp>
+#include <RaveCubeController.hpp>
+#include <I2CController.hpp>
 
-#include <SettingsStructs.h>
-#include <FFT.h>
-#include <Adc1.h>
-#include <VoltageSignal.h>
-#include <UartController.h>
-#include <SettingsController.h>
-#include <LedController.h>
-#include <MovingAvgFilter.h>
-#include <RaveCubeController.h>
-#include <I2CController.h>
-
-/* USER CODE BEGIN PV */
 Adc1* adc1;
 UartController uart2;
 LedController* ledCtrl;
@@ -63,20 +60,9 @@ I2CController* i2c;
 VoltageSignal vSignal;
 FFT fft;
 FFT_Result* fftResult;
-/* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-//static void MX_DMA_Init(void);
-//static void MX_TIM1_Init(void);
-/* USER CODE BEGIN PFP */
-
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
 
 /**
   * @brief  The application entry point.
@@ -84,12 +70,6 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
-	/* USER CODE BEGIN 1 */
-
-	/* USER CODE END 1 */
-
-	/* MCU Configuration--------------------------------------------------------*/
-
 	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
 	HAL_Init();
 
@@ -100,7 +80,6 @@ int main(void)
 	ledCtrl = LedController::GetInstance();
 	i2c = I2CController::GetInstance();
 
-	/* USER CODE BEGIN SysInit */
 	__HAL_RCC_GPIOA_CLK_ENABLE();
 	__HAL_RCC_GPIOB_CLK_ENABLE();
 	__HAL_RCC_GPIOF_CLK_ENABLE();
@@ -108,14 +87,14 @@ int main(void)
 	__HAL_RCC_DMA1_CLK_ENABLE();
 	__HAL_RCC_DMA2_CLK_ENABLE();
 
-//	GPIO_InitTypeDef GPIO_InitStruct = {0};
+	//	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-//	/*Configure GPIO pin : AdcTim Interrupt Toggle */
-//	GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_4 ;
-//	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-//	GPIO_InitStruct.Pull = GPIO_NOPULL;
-//	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-//	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+	//	/*Configure GPIO pin : AdcTim Interrupt Toggle */
+	//	GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_4 ;
+	//	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	//	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	//	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	//	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 	i2c->Init();
 	SettingsController settingsCtrl(i2c);
@@ -126,8 +105,6 @@ int main(void)
 
 	RaveCubeController raveCtrl(ledCtrl, &uart2, &settingsCtrl);
 
-	/* Infinite loop */
-	/* USER CODE BEGIN WHILE */
 	while (1)
 	{
 		if(ledCtrl->IsLedUpdateComplete())
@@ -149,10 +126,7 @@ int main(void)
 			uint8_t* msgStr = uart2.GetRxMessage();
 			raveCtrl.ExecuteCommand(msgStr);
 		}
-
-	/* USER CODE BEGIN 3 */
 	}
-	/* USER CODE END 3 */
 }
 
 /**
@@ -259,35 +233,20 @@ extern "C" void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c)
 //
 //}
 
-/* USER CODE END 4 */
-
 /**
   * @brief  This function is executed in case of error occurrence.
   * @retval None
   */
 void Error_Handler(void)
 {
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
 
-  /* USER CODE END Error_Handler_Debug */
 }
 
 #ifdef  USE_FULL_ASSERT
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
+
+
 void assert_failed(uint8_t *file, uint32_t line)
 {
-  /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  /* USER CODE END 6 */
-}
-#endif /* USE_FULL_ASSERT */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+}
+#endif

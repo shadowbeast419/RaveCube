@@ -9,7 +9,7 @@
 #define INC_ADCTIMER2_H_
 
 #include "stm32g4xx_hal.h"
-#include "main.h"
+#include <main.hpp>
 
 class AdcTimer2
 {

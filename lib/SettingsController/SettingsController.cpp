@@ -5,7 +5,7 @@
  *      Author: Christoph
  */
 
-#include <SettingsController.h>
+#include <SettingsController.hpp>
 
 SettingsController::SettingsController(I2CController* i2cInstance)
 {

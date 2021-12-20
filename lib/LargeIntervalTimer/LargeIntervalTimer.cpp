@@ -5,7 +5,7 @@
  *      Author: Christoph
  */
 
-#include <LargeIntervalTimer.h>
+#include <LargeIntervalTimer.hpp>
 
 LargeIntervalTimer::LargeIntervalTimer()
 {
