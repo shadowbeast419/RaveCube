@@ -96,3 +96,65 @@ void SettingsController::SaveSettings()
 		_i2c->WriteDataEEPROM(&settingsData, 0);
 	}
 }
+
+uint8_t SettingsController::GetLowestFrequencyColor()
+{
+    uint8_t indexRed = 0, indexGreen = 1, indexBlue = 2;
+    uint8_t minFrequencies[3] = {0};
+	uint8_t indexOfMax = 0;
+	uint16_t maxValue = 0;
+
+	minFrequencies[indexRed] = settingsData.boundaries.Red.Min;
+	minFrequencies[indexGreen] = settingsData.boundaries.Green.Min;
+	minFrequencies[indexBlue] = settingsData.boundaries.Blue.Min;
+
+	for(uint8_t i = 0; i < 3; i++)
+	{
+		if(minFrequencies[i] > maxValue)
+		{
+			maxValue = minFrequencies[i];
+			indexOfMax = i;
+		}
+	}
+
+	switch(indexOfMax)
+	{
+		case 0:
+			return Red;
+		
+		case 1:
+			return Green;
+
+		case 2:
+			return Blue;
+		
+		default:
+			return Red;
+	}
+}
+
+
+FrequencyBoundary SettingsController::GetLowestFrequencyBoundary()
+{
+	// Get the color with the lowest frequency boundaries
+    uint8_t lowFreqColor = GetLowestFrequencyColor();
+    FrequencyBoundary lowFreqBoundary = {0};
+
+	switch(lowFreqColor)
+	{
+		case Red:
+			lowFreqBoundary = settingsData.boundaries.Red;
+			break;
+
+		case Green:
+			lowFreqBoundary = settingsData.boundaries.Green;
+			break;
+
+		case Blue:
+			lowFreqBoundary = settingsData.boundaries.Blue;
+			break;
+	}
+
+	return lowFreqBoundary;
+}
+

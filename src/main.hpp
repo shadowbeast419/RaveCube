@@ -80,10 +80,11 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 
 #define FFT_LENGTH_OF_1024
-//#define FFT_LENGTH_OF_2048
-
 #define FFT_SAMPLE_COUNT 1024
-#define SAMPLE_FREQ 75776
+
+// Could lead to aliasing effects because the filter has a cutoff frequency of 20kHz
+// (12288 Hz = 12 * 1024 Samples)
+#define SAMPLE_FREQ 12288
 #define HZ_PER_SAMPLE ((uint16_t)(SAMPLE_FREQ / FFT_SAMPLE_COUNT))
 #define CUT_OFF_FREQUENCY 6000
 #define MAX_FFT_RESULT_INDEX ((uint16_t)(CUT_OFF_FREQUENCY / HZ_PER_SAMPLE))

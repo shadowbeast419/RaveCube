@@ -28,4 +28,11 @@ struct HSVBrightness
 	float32_t Brightness;
 };
 
+enum ColorSelection
+{
+	Red,
+	Green,
+	Blue
+};
+
 #endif /* INC_RGBLEDBRIGHTNESS_H_ */

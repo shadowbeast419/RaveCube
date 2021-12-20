@@ -10,7 +10,6 @@
 
 #include "stm32g4xx_hal.h"
 #include <main.hpp>
-#include <SettingsController.hpp>
 #include <string.h>
 #include <SettingsStructs.hpp>
 

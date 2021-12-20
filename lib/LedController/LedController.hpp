@@ -14,13 +14,14 @@
 #define USE_HSV
 
 #include "stm32g4xx_hal.h"
-#include <PwmGenerator.hpp>
+#include <SettingsStructs.hpp>
 #include <RgbLedBrightness.hpp>
+#include <LargeIntervalTimer.hpp>
+#include <PwmGenerator.hpp>
 #include <MovingAvgFilter.hpp>
 #include <SettingsController.hpp>
 #include <FFT.hpp>
-#include <LargeIntervalTimer.hpp>
-#include <SettingsStructs.hpp>
+
 
 const uint8_t gamma8[256] = {
 	    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -39,13 +40,6 @@ const uint8_t gamma8[256] = {
 	  144,146,148,150,152,154,156,158,160,162,164,167,169,171,173,175,
 	  177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
 	  215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };
-
-enum ColorSelection
-{
-	Red,
-	Green,
-	Blue
-};
 
 class SettingsController;
 

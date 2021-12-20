@@ -52,6 +52,7 @@
 #include <MovingAvgFilter.hpp>
 #include <RaveCubeController.hpp>
 #include <I2CController.hpp>
+#include <BeatDetector.hpp>
 
 Adc1* adc1;
 UartController uart2;
@@ -104,6 +105,7 @@ int main(void)
 	ledCtrl->Init(&settingsCtrl);
 
 	RaveCubeController raveCtrl(ledCtrl, &uart2, &settingsCtrl);
+	BeatDetector beatDetector(&settingsCtrl, &uart2);
 
 	while (1)
 	{
@@ -117,6 +119,7 @@ int main(void)
 			vSignal.UpdateAdcValues(adc1->GetAdcValues());
 			fft.UpdateVoltageSignal(&vSignal, adc1->GetSampleFrequency());
 			fftResult = fft.CalculateFFT();
+			beatDetector.CalculateBeatsPerMinute(fftResult);
 			ledCtrl->CalculateBrightness(fftResult, vSignal.GetRMSValue());
 			raveCtrl.SendStreamingData();
 		}

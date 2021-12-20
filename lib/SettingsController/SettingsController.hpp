@@ -9,8 +9,8 @@
 #define INC_SETTINGSCONTROLLER_H_
 
 #include <I2CController.hpp>
-#include <string.h>
 #include <SettingsStructs.hpp>
+#include <string.h>
 
 class I2CController;
 
@@ -28,6 +28,8 @@ public:
 	SettingsController(I2CController* i2cInstance);
 	virtual ~SettingsController();
 	void SaveSettings();
+	uint8_t GetLowestFrequencyColor();
+	FrequencyBoundary GetLowestFrequencyBoundary();
 };
 
 #endif /* INC_SETTINGSCONTROLLER_H_ */
