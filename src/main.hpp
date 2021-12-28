@@ -28,7 +28,7 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32g4xx_hal.h"
+#include <stm32g4xx_hal.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -79,14 +79,14 @@ void Error_Handler(void);
 #define LD2_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
-#define FFT_LENGTH_OF_1024
+// Removes FFT constants for values other than 1024
 #define FFT_SAMPLE_COUNT 1024
 
 // Could lead to aliasing effects because the filter has a cutoff frequency of 20kHz
 // (12288 Hz = 12 * 1024 Samples)
-#define SAMPLE_FREQ 12288
+#define SAMPLE_FREQ 40960
 #define HZ_PER_SAMPLE ((uint16_t)(SAMPLE_FREQ / FFT_SAMPLE_COUNT))
-#define CUT_OFF_FREQUENCY 6000
+#define CUT_OFF_FREQUENCY 20000
 #define MAX_FFT_RESULT_INDEX ((uint16_t)(CUT_OFF_FREQUENCY / HZ_PER_SAMPLE))
 
 #define MAX_ADC_AC_INPUT_VOLTAGE ((uint16_t)2000)

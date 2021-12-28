@@ -86,8 +86,10 @@ arm_status arm_cfft_radix4_init_f32(
   /*  Initialise the FFT length */
   S->fftLen = fftLen;
 
+  #ifndef SAVE_FLASH
   /*  Initialise the Twiddle coefficient pointer */
   S->pTwiddle = (float32_t *) twiddleCoef;
+  #endif
 
   /*  Initialise the Flag for selection of CFFT or CIFFT */
   S->ifftFlag = ifftFlag;
@@ -158,6 +160,8 @@ arm_status arm_cfft_radix4_init_f32(
   }
 
   return (status);
+
+  return 0;
 }
 
 /**    

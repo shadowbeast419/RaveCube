@@ -297,6 +297,7 @@
 #endif
 
 #define __CMSIS_GENERIC         /* disable NVIC and Systick functions */
+#define SAVE_FLASH
 
 #if defined(ARM_MATH_CM7)
   #include "core_cm7.h"

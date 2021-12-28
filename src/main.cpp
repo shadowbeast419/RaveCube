@@ -105,7 +105,7 @@ int main(void)
 	ledCtrl->Init(&settingsCtrl);
 
 	RaveCubeController raveCtrl(ledCtrl, &uart2, &settingsCtrl);
-	BeatDetector beatDetector(&settingsCtrl, &uart2);
+	BeatDetector beatDetector(&settingsCtrl, &uart2, (uint32_t)SAMPLE_FREQ, (uint16_t)FFT_SAMPLE_COUNT);
 
 	while (1)
 	{

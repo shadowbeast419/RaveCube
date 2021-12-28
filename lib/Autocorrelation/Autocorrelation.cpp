@@ -10,11 +10,15 @@ void Autocorrelation::Init(SettingsController* settingsCtrl)
 {
     _settingsCtrl = settingsCtrl;
     InitRingBuffer(_sequenceIntervals);
+}
 
-    for(int i = 0; i < MAX_SEQUENCE_INTERVALS / 2; i++)
-    {
-        _lagArray[i] = 0.0f;
-    }
+
+void Autocorrelation::ClearRingBuffer()
+{
+    InitRingBuffer(_sequenceIntervals);
+
+    _elementCount = 0;
+    _bufferIsFull = false;
 }
 
 void Autocorrelation::InitRingBuffer(uint16_t sequenceIntervals)
@@ -37,21 +41,21 @@ void Autocorrelation::InitRingBuffer(uint16_t sequenceIntervals)
 
 	for(uint16_t i = 0; i < sequenceIntervals; i++)
 	{
-		_ringBuffer[i].energy = 0.0;
+		_ringBuffer[i].energy = 0.0f;
 	}
 }
 
 void Autocorrelation::AddFrequencyEnergy(FFT_Result* fftResult, int sampleCount)
 {
     // Are we at the end of the Array?
-    if(_elementCount >= MAX_SEQUENCE_INTERVALS)
+    if(_elementCount >= _sequenceIntervals)
     {
         _bufferIsFull = true;
     }
 
     // Get the frequency boundary of the BASS
     FrequencyBoundary lowestFreqBoundary = _settingsCtrl->GetLowestFrequencyBoundary();
-    float32_t sumOfFreqEnergy = 0;
+    float32_t sumOfFreqEnergy = 0.0f;
 
     for(int i = 0; i < sampleCount; i++)
     {
@@ -62,7 +66,7 @@ void Autocorrelation::AddFrequencyEnergy(FFT_Result* fftResult, int sampleCount)
         }
     }
 
-    _currentRingNode->energy = (uint32_t)sumOfFreqEnergy;
+    _currentRingNode->energy = sumOfFreqEnergy;
     _currentRingNode = _currentRingNode->pNext;
 
     if(!_bufferIsFull)
@@ -71,12 +75,6 @@ void Autocorrelation::AddFrequencyEnergy(FFT_Result* fftResult, int sampleCount)
 
 float32_t* Autocorrelation::Autocorrelate(int16_t* maxIndex)
 {
-    // Not enough data for correlation
-    *maxIndex = -1;
-
-    if(_elementCount < MIN_VALUES_FOR_CORRELATION)
-        return NULL;
-
     // ElementIndex can be the count as maximum
     *maxIndex = _elementCount - 1;
 
@@ -90,11 +88,18 @@ float32_t* Autocorrelation::Autocorrelate(int16_t* maxIndex)
 
         for(uint16_t i = 0; i < dataCount - j; i++)
         {
-            _lagArray[j] += ((float32_t)GetElementOfBuffer(j) - mean) * 
-                ((float32_t)GetElementOfBuffer(i+j) - mean);
+            _lagArray[j] += ((GetElementOfBuffer(j) - mean) * 
+                (GetElementOfBuffer(i+j) - mean));
         }
 
-        _lagArray[j] /= deviation;
+        if(deviation > 0.0f)
+        {
+            _lagArray[j] /= deviation;
+        }
+        else
+        {
+            _lagArray[j] = -100.0f;
+        }
     }
 
     return _lagArray;
@@ -103,7 +108,7 @@ float32_t* Autocorrelation::Autocorrelate(int16_t* maxIndex)
 float32_t Autocorrelation::CalculateMeanOfBuffer()
 {
     uint16_t dataCount = _elementCount;
-    uint32_t sum = 0;
+    float32_t sum = 0.0f;
     RingBufferNodeFrequencyEnergy* currentNode = _currentRingNode;
 
     for(uint16_t i = 0; i < dataCount; i++)
@@ -112,30 +117,25 @@ float32_t Autocorrelation::CalculateMeanOfBuffer()
         currentNode = currentNode->pPrev;
     }
 
-    return (float32_t)sum / (float32_t)dataCount;
+    return sum / (float32_t)dataCount;
 }
 
 float32_t Autocorrelation::CalculateDeviationOfBuffer(float32_t mean)
 {
     uint16_t dataCount = _elementCount;
-    float32_t sum = 0;
+    float32_t sum = 0.0f;
     RingBufferNodeFrequencyEnergy* currentNode = _currentRingNode;
 
     for(uint16_t i = 0; i < dataCount; i++)
     {
-        sum += ((float32_t)currentNode->energy - mean) * ((float32_t)currentNode->energy - mean);
+        sum += ((currentNode->energy - mean) * (currentNode->energy - mean));
         currentNode = currentNode->pPrev;
     }
 
-    sum /= (float32_t)dataCount;
-
-    float32_t result = 0.0f;
-    arm_sqrt_f32(sum, &result);
-
-    return result;
+    return sum;
 }
 
-uint32_t Autocorrelation::GetElementOfBuffer(uint16_t index)
+float32_t Autocorrelation::GetElementOfBuffer(uint16_t index)
 {
     if(index >= _elementCount)
         return -1;
@@ -149,6 +149,16 @@ uint32_t Autocorrelation::GetElementOfBuffer(uint16_t index)
     }
 
     return currentNode->energy;
+}
+
+uint16_t Autocorrelation::GetDataCount()
+{
+    return _elementCount;
+}
+
+bool Autocorrelation::IsBufferFull()
+{
+    return _bufferIsFull;
 }
 
 void Autocorrelation::SetSequenceIntervals(uint16_t sequenceIntervals)

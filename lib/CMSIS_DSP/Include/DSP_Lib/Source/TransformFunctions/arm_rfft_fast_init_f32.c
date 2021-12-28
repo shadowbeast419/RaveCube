@@ -77,6 +77,8 @@ arm_status arm_rfft_fast_init_f32(
   /*  Initializations of structure parameters depending on the FFT length */
   switch (Sint->fftLen)
   {
+
+    #ifndef SAVE_FLASH
   case 2048u:
     /*  Initializations of structure parameters for 2048 point FFT */
     /*  Initialise the bit reversal table length */
@@ -87,6 +89,7 @@ arm_status arm_rfft_fast_init_f32(
 		Sint->pTwiddle     = (float32_t *) twiddleCoef_2048;
 		S->pTwiddleRFFT    = (float32_t *) twiddleCoef_rfft_4096;
     break;
+    #endif
   case 1024u:
     Sint->bitRevLength = ARMBITREVINDEXTABLE1024_TABLE_LENGTH;
     Sint->pBitRevTable = (uint16_t *)armBitRevIndexTable1024;
