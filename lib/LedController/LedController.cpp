@@ -23,7 +23,7 @@ void LedController::Init(SettingsController* settingsCtrl)
 {
 	_settingsCtrl = settingsCtrl;
 	_peakTimer.Init();
-	_movAvgFilter.SetFilterOrder(settingsCtrl->settingsData.filterOrders);
+	_movAvgFilter.SetFilterOrder(settingsCtrl->settingsData.filterOrders, true);
 
 	this->InitLedMatrix();
 	this->InitPwm();
@@ -147,7 +147,7 @@ void LedController::UpdatePwmSettingsBuffer(uint32_t ledIndexTmp, uint8_t ledIsO
 	}
 }
 
-void LedController::CalculateBrightness(FFT_Result* fftResult, float32_t rmsVoltage)
+RgbLedBrightness LedController::CalculateBrightness(FFT_Result* fftResult, float32_t rmsVoltage)
 {
 	float32_t voltageRatio = 0.0f;
 
@@ -207,6 +207,8 @@ void LedController::CalculateBrightness(FFT_Result* fftResult, float32_t rmsVolt
 	sumParams.Green = (uint16_t)(sumParams.Green * _settingsCtrl->settingsData.factors.Green);
 	sumParams.Blue = (uint16_t)(sumParams.Blue * _settingsCtrl->settingsData.factors.Blue);
 
+	_currentUnfilteredBrightness = sumParams;
+
 	sumParams = ApplyOvershoot(sumParams);
 
 	_movAvgFilter.AddBrightnessValue(sumParams);
@@ -226,6 +228,8 @@ void LedController::CalculateBrightness(FFT_Result* fftResult, float32_t rmsVolt
 		_currentBrightness.Green = gamma8[_currentBrightness.Green];
 		_currentBrightness.Blue = gamma8[_currentBrightness.Blue];
 	}
+
+	return _currentBrightness;
 }
 
 void LedController::UpdateLEDColor()
@@ -490,9 +494,26 @@ RgbLedBrightness LedController::CalculateRGBBrightness(FFT_Result* fftResult, fl
 	blueBrightness = CalculateBrightnessValueLinear(voltageRatio, _settingsCtrl->settingsData.factors.Blue, blueFrequencyPart / sumFrequencyAmplitudes);
 
 #endif
-
 	_movAvgFilter.AddBrightnessValue({redBrightness, greenBrightness, blueBrightness});
 	filteredBrightness = _movAvgFilter.GetAverageBrightness();
+
+	if(!_movAvgFilter.IsRingBufferFull(Red))
+	{
+		// Use previous brightness if MovAvgFilter is full
+		filteredBrightness.Red = _brightnessBeforeReset.Red;
+	}
+
+	if(!_movAvgFilter.IsRingBufferFull(Green))
+	{
+		// Use previous brightness if MovAvgFilter is full
+		filteredBrightness.Green = _brightnessBeforeReset.Green;
+	}
+
+	if(!_movAvgFilter.IsRingBufferFull(Blue))
+	{
+		// Use previous brightness if MovAvgFilter is full
+		filteredBrightness.Blue = _brightnessBeforeReset.Blue;
+	}
 
 	RgbLedBrightness brightness = ApplyOvershoot(filteredBrightness);
 
@@ -604,12 +625,13 @@ uint8_t LedController::IsLedUpdateComplete()
 	return _ledMatrixFilled && !_dmaBufferNeedsUpdate;
 }
 
-void LedController::SetFilterOrder(MovingAvgFilterOrder filterOrders)
+void LedController::SetFilterOrder(FilterLevels filterOrders, bool clearRingBuffer)
 {
-	_movAvgFilter.SetFilterOrder(filterOrders);
+	_brightnessBeforeReset = _currentBrightness;
+	_movAvgFilter.SetFilterOrder(filterOrders, clearRingBuffer);
 }
 
-MovingAvgFilterOrder LedController::GetFilterOrder()
+FilterLevels LedController::GetFilterOrder()
 {
 	return _movAvgFilter.GetFilterOrder();
 }
@@ -622,17 +644,22 @@ void LedController::ResetLedMatrix()
 
 RgbLedBrightness LedController::GetCurrentBrightness()
 {
-	return this->_currentBrightness;
+	return _currentBrightness;
+}
+
+RgbLedBrightness LedController::GetCurrentUnfilteredBrightness()
+{
+	return _currentUnfilteredBrightness;
 }
 
 float32_t LedController::GetRMSVoltage()
 {
-	return this->_filteredRmsVoltage;
+	return _filteredRmsVoltage;
 }
 
 float32_t LedController::GetPeakRMSVoltage()
 {
-	return this->_filteredPeakRmsVoltage;
+	return _filteredPeakRmsVoltage;
 }
 
 LedController::~LedController()

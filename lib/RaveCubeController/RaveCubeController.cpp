@@ -110,10 +110,30 @@ void RaveCubeController::ChangeStreamingAmplitudeValuesEnable(uint8_t* cmdStr)
 	}
 }
 
+void RaveCubeController::UpdateFilterOrders(FilterLevels orders, bool saveToEEPROM)
+{
+	if((orders.RedBrightness >= COLOR_FILTER_ORDER_MIN) && (orders.RedBrightness < COLOR_FILTER_ORDER_MAX) &&
+			(orders.GreenBrightness >= COLOR_FILTER_ORDER_MIN) && (orders.GreenBrightness < COLOR_FILTER_ORDER_MAX) &&
+			(orders.BlueBrightness >= COLOR_FILTER_ORDER_MIN) && (orders.BlueBrightness < COLOR_FILTER_ORDER_MAX) &&
+			(orders.Voltage >= 3) && (orders.Voltage <= VOLTAGE_FILTER_ORDER_MAX) &&
+			(orders.PeakVoltage >= 3) && (orders.PeakVoltage <= VOLTAGE_FILTER_ORDER_MAX))
+	{
+		_settingsCtrlInstance->settingsData.filterOrders = orders;
+		_ledCtrlInstance->SetFilterOrder(orders, false);
+
+		if(saveToEEPROM)
+			_settingsCtrlInstance->SaveSettings();
+	}
+	else
+	{
+		_uartCtrlInstance->Transmit(_invalidString);
+	}
+}
+
 void RaveCubeController::ChangeFilterOrder(uint8_t* cmdStr)
 {
 	char* pSplittedStr = strtok((char*)cmdStr, " ");
-	MovingAvgFilterOrder orders = {0};
+	FilterLevels orders = {0};
 
 	for(uint8_t i = 0; pSplittedStr != NULL; i++)
 	{
@@ -145,21 +165,23 @@ void RaveCubeController::ChangeFilterOrder(uint8_t* cmdStr)
 		pSplittedStr = strtok(NULL, " ");
 	}
 
-	if((orders.RedBrightness >= 3) && (orders.RedBrightness < COLOR_FILTER_ORDER_MAX) &&
-			(orders.GreenBrightness >= 3) && (orders.GreenBrightness < COLOR_FILTER_ORDER_MAX) &&
-			(orders.BlueBrightness >= 3) && (orders.BlueBrightness < COLOR_FILTER_ORDER_MAX) &&
-			(orders.Voltage >= 3) && (orders.Voltage <= VOLTAGE_FILTER_ORDER_MAX) &&
-			(orders.PeakVoltage >= 3) && (orders.PeakVoltage <= VOLTAGE_FILTER_ORDER_MAX))
-	{
-		_settingsCtrlInstance->settingsData.filterOrders = orders;
-		_ledCtrlInstance->SetFilterOrder(orders);
+	UpdateFilterOrders(orders, true);
+}
 
-		_settingsCtrlInstance->SaveSettings();
-	}
-	else
-	{
-		_uartCtrlInstance->Transmit(_invalidString);
-	}
+void RaveCubeController::ChangeFilterOrder(FilterLevels newLevels, bool saveToEEPROM)
+{
+	char transmitBuffer[CTRL_TX_BUFFER_LENGTH];
+
+	// For now, only update the color filters and use "old" voltage filter orders
+	newLevels.PeakVoltage = _settingsCtrlInstance->settingsData.filterOrders.PeakVoltage;
+	newLevels.Voltage = _settingsCtrlInstance->settingsData.filterOrders.Voltage;
+
+	sprintf(transmitBuffer, "Filters adjusted to: R: %u, G: %u, B: %u \n", 
+		newLevels.RedBrightness, newLevels.GreenBrightness, newLevels.BlueBrightness);
+	_uartCtrlInstance->Transmit((uint8_t*) transmitBuffer);
+	while(_uartCtrlInstance->IsTxBusy());
+
+	UpdateFilterOrders(newLevels, saveToEEPROM);
 }
 
 void RaveCubeController::ChangeBoundaries(uint8_t* cmdStr)
@@ -216,6 +238,8 @@ void RaveCubeController::ChangeBoundaries(uint8_t* cmdStr)
 	{
 		_uartCtrlInstance->Transmit(_invalidString);
 	}
+
+	while(_uartCtrlInstance->IsTxBusy());
 }
 
 void RaveCubeController::ChangeLedStatus(uint8_t* cmdStr)
@@ -244,7 +268,6 @@ void RaveCubeController::ChangeLedStatus(uint8_t* cmdStr)
 		_ledCtrlInstance->ResetLedMatrix();
 		_settingsCtrlInstance->SaveSettings();
 
-
 		sprintf(transmitBuffer, "LedStatus set: %u \n", ledStatus);
 		_uartCtrlInstance->Transmit((uint8_t*) transmitBuffer);
 	}
@@ -252,6 +275,8 @@ void RaveCubeController::ChangeLedStatus(uint8_t* cmdStr)
 	{
 		_uartCtrlInstance->Transmit(_invalidString);
 	}
+
+	while(_uartCtrlInstance->IsTxBusy());
 }
 
 void RaveCubeController::ChangeGamma(uint8_t* cmdStr)
@@ -286,6 +311,8 @@ void RaveCubeController::ChangeGamma(uint8_t* cmdStr)
 	{
 		_uartCtrlInstance->Transmit(_invalidString);
 	}
+
+	while(_uartCtrlInstance->IsTxBusy());
 }
 
 void RaveCubeController::ChangeBrightnessFactors(uint8_t* cmdStr)
@@ -326,6 +353,8 @@ void RaveCubeController::ChangeBrightnessFactors(uint8_t* cmdStr)
 	{
 		_uartCtrlInstance->Transmit(_invalidString);
 	}
+
+	while(_uartCtrlInstance->IsTxBusy());
 }
 
 void RaveCubeController::ChangeAmplitude(uint8_t* cmdStr)
@@ -352,6 +381,8 @@ void RaveCubeController::ChangeAmplitude(uint8_t* cmdStr)
 	{
 		_uartCtrlInstance->Transmit(_invalidString);
 	}
+
+	while(_uartCtrlInstance->IsTxBusy());
 }
 
 void RaveCubeController::SendData()
@@ -377,6 +408,7 @@ void RaveCubeController::SendData()
 			_settingsCtrlInstance->settingsData.factors.Blue);
 
 	_uartCtrlInstance->Transmit((uint8_t*)transmitBuffer);
+	while(_uartCtrlInstance->IsTxBusy());
 }
 
 void RaveCubeController::SetStreamingFilterValueStatus(uint8_t streamFilterStatus)
@@ -418,11 +450,11 @@ void RaveCubeController::SendStreamingData()
 			sprintf(transmitBuffer, "_%u %u %u %f %f_\n", brightness.Red, brightness.Green, brightness.Blue,
 					_ledCtrlInstance->GetRMSVoltage(), _ledCtrlInstance->GetPeakRMSVoltage());
 			_uartCtrlInstance->Transmit((uint8_t*)transmitBuffer);
+
+			while(_uartCtrlInstance->IsTxBusy());
 		}
 	}
 }
-
-
 
 RaveCubeController::~RaveCubeController()
 {

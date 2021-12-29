@@ -36,6 +36,7 @@ private:
 	void ChangeAmplitude(uint8_t* cmdStr);
 	void ChangeStreamingBrightnessValuesEnable(uint8_t* cmdStr);
 	void ChangeStreamingAmplitudeValuesEnable(uint8_t* cmdStr);
+	void UpdateFilterOrders(FilterLevels orders, bool saveToEEPROM);
 
 	void SendData();
 
@@ -46,6 +47,7 @@ public:
 	RaveCubeController(LedController* ledCtrlInstance, UartController* uartCtrlInstance, SettingsController* settingCtrl);
 	void ExecuteCommand(uint8_t* cmdStr);
 	void SendStreamingData();
+	void ChangeFilterOrder(FilterLevels newLevels, bool saveToEEPROM);
 
 	virtual ~RaveCubeController();
 };

@@ -40,7 +40,7 @@ struct SettingsFrame
 	float32_t amplitude;
 	BrightnessFactors factors;
 	FrequencyColorBoundaries boundaries;
-	MovingAvgFilterOrder filterOrders;
+	FilterLevels filterOrders;
 };
 
 #endif /* INC_SETTINGSSTRUCT_H_ */

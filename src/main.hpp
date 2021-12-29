@@ -80,13 +80,13 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 
 // Removes FFT constants for values other than 1024
-#define FFT_SAMPLE_COUNT 1024
+#define FFT_SAMPLE_COUNT 256
 
 // Could lead to aliasing effects because the filter has a cutoff frequency of 20kHz
 // (12288 Hz = 12 * 1024 Samples)
-#define SAMPLE_FREQ 40960
+#define SAMPLE_FREQ 12288
 #define HZ_PER_SAMPLE ((uint16_t)(SAMPLE_FREQ / FFT_SAMPLE_COUNT))
-#define CUT_OFF_FREQUENCY 20000
+#define CUT_OFF_FREQUENCY 6000
 #define MAX_FFT_RESULT_INDEX ((uint16_t)(CUT_OFF_FREQUENCY / HZ_PER_SAMPLE))
 
 #define MAX_ADC_AC_INPUT_VOLTAGE ((uint16_t)2000)

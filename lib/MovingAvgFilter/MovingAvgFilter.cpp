@@ -20,9 +20,9 @@ MovingAvgFilter::MovingAvgFilter()
 
 void MovingAvgFilter::InitRingBuffer()
 {
-	InitColorRingBuffer(_ringBufferRedBrightness, _filterOrders.RedBrightness, &_currentNodeRedBrightness, 0);
-	InitColorRingBuffer(_ringBufferGreenBrightness, _filterOrders.GreenBrightness, &_currentNodeGreenBrightness, 0);
-	InitColorRingBuffer(_ringBufferBlueBrightness, _filterOrders.BlueBrightness, &_currentNodeBlueBrightness, 0);
+	InitColorRingBuffer(_ringBufferRedBrightness, _filterOrders.RedBrightness, &_currentNodeRedBrightness, true);
+	InitColorRingBuffer(_ringBufferGreenBrightness, _filterOrders.GreenBrightness, &_currentNodeGreenBrightness, true);
+	InitColorRingBuffer(_ringBufferBlueBrightness, _filterOrders.BlueBrightness, &_currentNodeBlueBrightness, true);
 	InitVoltageRingBuffer(_ringBufferVoltage, _filterOrders.Voltage, &_currentNodeVoltage, 150.f);
 	InitVoltageRingBuffer(_ringBufferPeakVoltage, _filterOrders.PeakVoltage, &_currentNodePeakVoltage, 150.0f);
 }
@@ -37,6 +37,15 @@ void MovingAvgFilter::AddBrightnessValue(RgbLedBrightness brightness)
 
 	_currentNodeBlueBrightness->brightness = brightness.Blue;
 	_currentNodeBlueBrightness = _currentNodeBlueBrightness->pNext;
+
+	if(_elementCounterRed < _filterOrders.RedBrightness)
+		_elementCounterRed++;
+	
+	if(_elementCounterGreen < _filterOrders.GreenBrightness)
+		_elementCounterGreen++;
+
+	if(_elementCounterBlue < _filterOrders.BlueBrightness)
+		_elementCounterBlue++;
 }
 
 void MovingAvgFilter::AddVoltageValue(float32_t voltage)
@@ -51,7 +60,8 @@ void MovingAvgFilter::AddPeakVoltageValue(float32_t voltage)
 	_currentNodePeakVoltage = _currentNodePeakVoltage->pNext;
 }
 
-void MovingAvgFilter::InitColorRingBuffer(RingBufferNodeColorAmplitude* ringBuffer, uint16_t order, RingBufferNodeColorAmplitude** _currentNode, uint16_t initValue)
+void MovingAvgFilter::InitColorRingBuffer(RingBufferNodeColorAmplitude* ringBuffer, uint16_t order, 
+	RingBufferNodeColorAmplitude** _currentNode, bool clearRingBuffer)
 {
 	if(order > COLOR_FILTER_ORDER_MAX)
 	{
@@ -75,10 +85,16 @@ void MovingAvgFilter::InitColorRingBuffer(RingBufferNodeColorAmplitude* ringBuff
 	// Last element points to start
 	ringBuffer[order - 1].pNext = &ringBuffer[0];
 
-	// Initialize the brightness values
-	for(uint16_t i = 0; i < order; i++)
+	uint16_t initValue = 0;
+
+	// If clearing is not necessary, set all the values to the last value
+	if(clearRingBuffer)
 	{
-		ringBuffer[i].brightness = initValue;
+		// Initialize the brightness values
+		for(uint16_t i = 0; i < order; i++)
+		{
+			ringBuffer[i].brightness = 0;
+		}
 	}
 
 	*_currentNode = &ringBuffer[0];
@@ -180,29 +196,41 @@ float32_t MovingAvgFilter::GetAveragePeakVoltage()
 	return CalculateAverageVoltage(_currentNodePeakVoltage, _filterOrders.PeakVoltage);
 }
 
-MovingAvgFilterOrder MovingAvgFilter::GetFilterOrder()
+FilterLevels MovingAvgFilter::GetFilterOrder()
 {
 	return _filterOrders;
 }
 
-void MovingAvgFilter::SetFilterOrder(MovingAvgFilterOrder orders)
+void MovingAvgFilter::SetFilterOrder(FilterLevels orders, bool clearRingBuffer)
 {
 	if(orders.RedBrightness != _filterOrders.RedBrightness)
 	{
 		_filterOrders.RedBrightness = orders.RedBrightness;
-		InitColorRingBuffer(_ringBufferRedBrightness, _filterOrders.RedBrightness, &_currentNodeRedBrightness, 0);
+
+		InitColorRingBuffer(_ringBufferRedBrightness, _filterOrders.RedBrightness, &_currentNodeRedBrightness, 
+			clearRingBuffer);
+		
+		_elementCounterRed = 0;
 	}
 
 	if(orders.GreenBrightness != _filterOrders.GreenBrightness)
 	{
 		_filterOrders.GreenBrightness = orders.GreenBrightness;
-		InitColorRingBuffer(_ringBufferGreenBrightness, _filterOrders.GreenBrightness, &_currentNodeGreenBrightness, 0);
+
+		InitColorRingBuffer(_ringBufferGreenBrightness, _filterOrders.GreenBrightness, &_currentNodeGreenBrightness, 
+			clearRingBuffer);
+
+		_elementCounterGreen = 0;
 	}
 
 	if(orders.BlueBrightness != _filterOrders.BlueBrightness)
 	{
 		_filterOrders.BlueBrightness = orders.BlueBrightness;
-		InitColorRingBuffer(_ringBufferBlueBrightness, _filterOrders.BlueBrightness, &_currentNodeBlueBrightness, 0);
+
+		InitColorRingBuffer(_ringBufferBlueBrightness, _filterOrders.BlueBrightness, &_currentNodeBlueBrightness, 
+			clearRingBuffer);
+
+		_elementCounterBlue = 0;
 	}
 
 	if(orders.Voltage != _filterOrders.Voltage)
@@ -216,6 +244,29 @@ void MovingAvgFilter::SetFilterOrder(MovingAvgFilterOrder orders)
 		_filterOrders.PeakVoltage = orders.PeakVoltage;
 		InitVoltageRingBuffer(_ringBufferPeakVoltage, _filterOrders.PeakVoltage, &_currentNodePeakVoltage, 200.0f);
 	}
+}
+
+bool MovingAvgFilter::IsRingBufferFull(ColorSelection color)
+{
+	bool isFull = false;
+
+	switch(color)
+	{
+		case Red:
+			isFull = _elementCounterRed >= _filterOrders.RedBrightness;
+
+			break;
+		case Green:
+			isFull = _elementCounterGreen >= _filterOrders.GreenBrightness;
+
+			break;
+		case Blue:
+			isFull = _elementCounterBlue >= _filterOrders.BlueBrightness;
+
+			break;
+	}
+
+	return isFull;
 }
 
 MovingAvgFilter::~MovingAvgFilter()

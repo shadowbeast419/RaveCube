@@ -53,7 +53,8 @@ private:
 	uint32_t								_currentPulseIndex = 0;
 	__IO uint8_t							_ledMatrixFilled = RESET;
 	MovingAvgFilter 						_movAvgFilter = MovingAvgFilter();
-	RgbLedBrightness						_currentBrightness = {0, 0, 0, 0};
+	RgbLedBrightness						_currentBrightness = {0};
+	RgbLedBrightness						_currentUnfilteredBrightness = {0};
 	const uint16_t							_maxBrightness = 255;
 	float32_t								_filteredPeakRmsVoltage = 0.0f;
 	float32_t								_filteredRmsVoltage = 0.0f;
@@ -62,6 +63,7 @@ private:
 	LargeIntervalTimer						_peakTimer = LargeIntervalTimer(TIM4, 0.5f);
 	uint16_t 								_prioThreshold = 50;
 	float32_t 								_prioAttenuation = 0.3f;
+	RgbLedBrightness						_brightnessBeforeReset = {0};
 
 	void InitLedMatrix();
 	void UpdatePwmSettingsBuffer(uint32_t ledIndexTmp, uint8_t ledIsOdd);
@@ -89,14 +91,15 @@ public:
 	void Init(SettingsController* settingsCtrl);
 
 	uint8_t IsLedUpdateComplete();
-	void CalculateBrightness(FFT_Result* fftResult, float32_t peakVoltage);
+	RgbLedBrightness CalculateBrightness(FFT_Result* fftResult, float32_t peakVoltage);
 	RgbLedBrightness FilterBrightness(RgbLedBrightness brightness);
 	void UpdateLEDColor();
 
 	RgbLedBrightness GetCurrentBrightness();
+	RgbLedBrightness GetCurrentUnfilteredBrightness();
 
-	void SetFilterOrder(MovingAvgFilterOrder filterOrders);
-	MovingAvgFilterOrder GetFilterOrder();
+	void SetFilterOrder(FilterLevels filterOrders, bool clearRingBuffer);
+	FilterLevels GetFilterOrder();
 
 	float32_t GetRMSVoltage();
 	float32_t GetPeakRMSVoltage();

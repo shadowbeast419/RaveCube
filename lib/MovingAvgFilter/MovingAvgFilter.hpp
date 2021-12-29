@@ -10,7 +10,8 @@
 
 #include <RgbLedBrightness.hpp>
 
-#define COLOR_FILTER_ORDER_MAX 50
+#define COLOR_FILTER_ORDER_MAX 100
+#define COLOR_FILTER_ORDER_MIN 3
 
 #define COLOR_FILTER_RED_ORDER_INIT 10
 #define COLOR_FILTER_GREEN_ORDER_INIT 10
@@ -36,7 +37,7 @@ struct RingBufferNodeVoltage
 	float32_t voltage;
 };
 
-struct MovingAvgFilterOrder
+struct FilterLevels
 {
 	uint16_t RedBrightness;
 	uint16_t GreenBrightness;
@@ -48,16 +49,19 @@ struct MovingAvgFilterOrder
 class MovingAvgFilter
 {
 private:
-	MovingAvgFilterOrder				_filterOrders = {0};
+	FilterLevels						_filterOrders = {0};
 
 	RingBufferNodeColorAmplitude		_ringBufferRedBrightness[COLOR_FILTER_ORDER_MAX];
 	RingBufferNodeColorAmplitude*		_currentNodeRedBrightness = NULL; // Current node of the color amplitudes in the ring buffer
+	uint16_t							_elementCounterRed = 0;
 
 	RingBufferNodeColorAmplitude		_ringBufferGreenBrightness[COLOR_FILTER_ORDER_MAX];
 	RingBufferNodeColorAmplitude*		_currentNodeGreenBrightness = NULL;
+	uint16_t							_elementCounterGreen = 0;
 
 	RingBufferNodeColorAmplitude		_ringBufferBlueBrightness[COLOR_FILTER_ORDER_MAX];
 	RingBufferNodeColorAmplitude*		_currentNodeBlueBrightness = NULL;
+	uint16_t							_elementCounterBlue = 0;
 
 	RingBufferNodeVoltage				_ringBufferVoltage[VOLTAGE_FILTER_ORDER_MAX];
 	RingBufferNodeVoltage*				_currentNodeVoltage = NULL;
@@ -65,9 +69,8 @@ private:
 	RingBufferNodeVoltage				_ringBufferPeakVoltage[PEAK_VOLTAGE_FILTER_ORDER_MAX];
 	RingBufferNodeVoltage*				_currentNodePeakVoltage = NULL;
 
-	uint8_t								_ringBufferFullFlag = RESET;
-
-	void InitColorRingBuffer(RingBufferNodeColorAmplitude* ringBuffer, uint16_t order, RingBufferNodeColorAmplitude** _currentNode, uint16_t initValue);
+	void InitColorRingBuffer(RingBufferNodeColorAmplitude* ringBuffer, uint16_t order, RingBufferNodeColorAmplitude** _currentNode, 
+		bool clearRingBuffer);
 	void InitVoltageRingBuffer(RingBufferNodeVoltage* ringBuffer, uint16_t order, RingBufferNodeVoltage** _currentNode, float32_t initValue);
 	uint16_t CalculateAverageBrightness(RingBufferNodeColorAmplitude* _currentNode, uint16_t order);
 	float32_t CalculateAverageVoltage(RingBufferNodeVoltage* _currentNode, uint16_t order);
@@ -85,10 +88,9 @@ public:
 	RgbLedBrightness GetAverageBrightness();
 	float32_t GetAverageVoltage();
 	float32_t GetAveragePeakVoltage();
-
-	MovingAvgFilterOrder GetFilterOrder();
-	void SetFilterOrder(MovingAvgFilterOrder orders);
-
+	FilterLevels GetFilterOrder();
+	void SetFilterOrder(FilterLevels orders, bool clearRingBuffer);
+	bool IsRingBufferFull(ColorSelection color);
 };
 
 #endif /* INC_MOVINGAVGFILTER_H_ */

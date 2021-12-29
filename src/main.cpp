@@ -106,6 +106,12 @@ int main(void)
 
 	RaveCubeController raveCtrl(ledCtrl, &uart2, &settingsCtrl);
 	BeatDetector beatDetector(&settingsCtrl, &uart2, (uint32_t)SAMPLE_FREQ, (uint16_t)FFT_SAMPLE_COUNT);
+	beatDetector.EnableOutputToUart = false;
+	beatDetector.UseAbsValueOfCorrelation = true;
+
+	CorrelationResult corrResult = {0};
+	FilterLevels updatedFilterLevels = {0};
+	bool calcSuccessful = false;
 
 	while (1)
 	{
@@ -119,8 +125,16 @@ int main(void)
 			vSignal.UpdateAdcValues(adc1->GetAdcValues());
 			fft.UpdateVoltageSignal(&vSignal, adc1->GetSampleFrequency());
 			fftResult = fft.CalculateFFT();
-			beatDetector.CalculateBeatsPerMinute(fftResult);
 			ledCtrl->CalculateBrightness(fftResult, vSignal.GetRMSValue());
+			
+			corrResult = beatDetector.CalculateBeatsPerMinute(ledCtrl->GetCurrentUnfilteredBrightness());
+			calcSuccessful = beatDetector.CalculateFilterLevels(corrResult, &updatedFilterLevels);
+
+			if(calcSuccessful)
+			{
+				raveCtrl.ChangeFilterOrder(updatedFilterLevels, false);
+			}
+
 			raveCtrl.SendStreamingData();
 		}
 
