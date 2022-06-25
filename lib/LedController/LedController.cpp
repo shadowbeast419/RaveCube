@@ -209,7 +209,7 @@ RgbLedBrightness LedController::CalculateBrightness(FFT_Result* fftResult, float
 
 	_currentUnfilteredBrightness = sumParams;
 
-	sumParams = ApplyOvershoot(sumParams);
+	// sumParams = ApplyOvershoot(sumParams);
 
 	_movAvgFilter.AddBrightnessValue(sumParams);
 	sumParams = _movAvgFilter.GetAverageBrightness();
