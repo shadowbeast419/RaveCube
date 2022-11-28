@@ -40,6 +40,8 @@
 
 #include "arm_math.h"
 
+#define SAVE_FLASH
+
 /**    
  * @addtogroup DCT4_IDCT4    
  * @{    
@@ -60,6 +62,8 @@
  *    
  * \image html dct4FormatsQ31Table.gif    
  */
+
+#ifndef SAVE_FLASH
 
 void arm_dct4_q31(
   const arm_dct4_instance_q31 * S,
@@ -389,6 +393,8 @@ void arm_dct4_q31(
 #endif /* #ifndef ARM_MATH_CM0_FAMILY */
 
 }
+
+#endif
 
 /**    
    * @} end of DCT4_IDCT4 group    

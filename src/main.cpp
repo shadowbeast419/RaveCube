@@ -113,6 +113,11 @@ int main(void)
 	FilterLevels updatedFilterLevels = {0};
 	bool calcSuccessful = false;
 
+	#ifdef ENABLE_STARTUP_SEQUENCE
+	uint32_t iterationCounter = 0;
+	bool startupIterationsComplete = false;
+	#endif
+
 	while (1)
 	{
 		if(ledCtrl->IsLedUpdateComplete())
@@ -125,8 +130,23 @@ int main(void)
 			vSignal.UpdateAdcValues(adc1->GetAdcValues());
 			fft.UpdateVoltageSignal(&vSignal, adc1->GetSampleFrequency());
 			fftResult = fft.CalculateFFT();
-			ledCtrl->CalculateBrightness(fftResult, vSignal.GetRMSValue());
+
+			#ifdef ENABLE_STARTUP_SEQUENCE
+
+			ledCtrl->CalculateBrightness(fftResult, vSignal.GetRMSValue(), startupIterationsComplete);
+
+			iterationCounter++;
+
+			// At this point the Filters have a valid result
+			if(iterationCounter > VOLTAGE_FILTER_ORDER_MAX * 2)
+				startupIterationsComplete = true;
+
+			#endif
 			
+			#ifndef ENABLE_STARTUP_SEQUENCE
+			ledCtrl->CalculateBrightness(fftResult, vSignal.GetRMSValue(), true);	
+			#endif
+
 			corrResult = beatDetector.CalculateBeatsPerMinute(ledCtrl->GetCurrentUnfilteredBrightness());
 			calcSuccessful = beatDetector.CalculateFilterLevels(corrResult, &updatedFilterLevels);
 
@@ -143,6 +163,8 @@ int main(void)
 			uint8_t* msgStr = uart2.GetRxMessage();
 			raveCtrl.ExecuteCommand(msgStr);
 		}
+
+
 	}
 }
 

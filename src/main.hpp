@@ -89,10 +89,8 @@ void Error_Handler(void);
 #define CUT_OFF_FREQUENCY 6000
 #define MAX_FFT_RESULT_INDEX ((uint16_t)(CUT_OFF_FREQUENCY / HZ_PER_SAMPLE))
 
-#define MAX_ADC_AC_INPUT_VOLTAGE ((uint16_t)2000)
-#define VOLTAGE_SCALING_FACTOR ((uint16_t)10)
-
 #define ENABLE_WINDOWING
+#define ENABLE_STARTUP_SEQUENCE
 
 // #define DISABLE_IRQS_TEMP
 /* USER CODE END Private defines */

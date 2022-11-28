@@ -42,6 +42,8 @@
 #include "arm_common_tables.h"
 #include "arm_const_structs.h"
 
+#ifndef SAVE_FLASH
+
 /**    
 * @ingroup groupTransforms    
 */
@@ -4279,6 +4281,8 @@ arm_status arm_rfft_init_q31(
     /* return the status of RFFT Init function */
     return (status);
 }
+
+#endif
 
 /**    
 * @} end of RealFFT group    

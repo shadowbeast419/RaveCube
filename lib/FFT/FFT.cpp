@@ -9,16 +9,7 @@
 
 FFT::FFT()
 {
-	// Bit not reversed -> "Normal" Output
-	arm_status status = arm_rfft_init_q15(&_fftInstance, FFT_SAMPLE_COUNT, 0, 1);
-
-	if(status != ARM_MATH_SUCCESS)
-	{
-		while(1)
-		{
-			// Error
-		}
-	}
+	arm_rfft_fast_init_f32(&_rfftFastInstance, FFT_SAMPLE_COUNT);
 }
 
 void FFT::UpdateVoltageSignal(VoltageSignal* voltageSignal, uint32_t sampleFrequency)
@@ -27,13 +18,34 @@ void FFT::UpdateVoltageSignal(VoltageSignal* voltageSignal, uint32_t sampleFrequ
 	_voltageSignal = voltageSignal;
 }
 
+
+// https://community.arm.com/support-forums/f/armds-forum/6243/problem-with-arm_rfft_fast_f32
 FFT_Result* FFT::CalculateFFT()
 {
-	FFT_Result result;
-	int16_t* signalArray;
-	float32_t signalBuffer = 0;
+	// Take the absolute value of the Nyquist frequency data and save it to variable
+	uint32_t fftBinCount = FFT_SAMPLE_COUNT / 2;
+	float32_t* signalArray = _voltageSignal->GetSignal();
+	float32_t maxValue;
+	uint32_t maxIndex;
+	uint16_t hzPerSample = HZ_PER_SAMPLE;
 
-	signalArray = _voltageSignal->GetSignal();
+	arm_rfft_fast_f32(&_rfftFastInstance, signalArray, _spectrumBuffer, 0);
+	arm_cmplx_mag_f32(_spectrumBuffer, _absSpectrumBuffer, fftBinCount);
+	arm_max_f32(_absSpectrumBuffer, fftBinCount, &maxValue, &maxIndex);
+
+	for(uint16_t i = 0; i < fftBinCount; i++)
+	{
+		// For better value resolution, skip the real "absolute" values of the FFT
+		// _fftResults[i].absoluteValue = absSpectrumBuffer[i] / FFT_SAMPLE_COUNT;
+		_fftResults[i].absoluteValue = _absSpectrumBuffer[i];
+		_fftResults[i].frequency = i * hzPerSample;
+	}
+
+/* 	for(uint16_t i = 0; i< FFT_SAMPLE_COUNT; i++)
+	{
+		// Convert
+		signalArrayFixed[i] = (int16_t)signalArray[i];
+	}
 
 	for(uint16_t i = 0; i < FFT_SAMPLE_COUNT; i++)
 	{
@@ -42,7 +54,7 @@ FFT_Result* FFT::CalculateFFT()
 		signalArray[i] = (int16_t)(signalBuffer * 32768.0f);
 	}
 
-	arm_rfft_q15(&_fftInstance, signalArray, _fftValuesBuffer);
+	arm_rfft_q15(&_fftInstance, signalArrayFixed, _fftValuesBuffer);
 
 	float32_t magnitudeBuffer = 0.0f;
 	uint16_t complexPairCounter = 0;
@@ -68,7 +80,7 @@ FFT_Result* FFT::CalculateFFT()
 		_fftResults[complexPairCounter] = result;
 
 		complexPairCounter++;
-	}
+	} */
 
 	return _fftResults;
 }

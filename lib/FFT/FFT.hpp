@@ -29,15 +29,13 @@ public:
 	FFT_Result* CalculateFFT();
 	float GetMaxFreqAmplitude();
 
-	const uint16_t					ScalingMulitplicator = 15;
-
 private:
 	uint32_t 						_sampleFrequency;
 	VoltageSignal* 					_voltageSignal;
-	FFT_Result 						_fftResults[MAX_FFT_RESULT_INDEX];
-	// float32_t 						dest[FFT_SAMPLE_COUNT / 2];
-	arm_rfft_instance_q15 			_fftInstance;
-	q15_t							_fftValuesBuffer[2 * FFT_SAMPLE_COUNT];
+	arm_rfft_fast_instance_f32		_rfftFastInstance;
+	FFT_Result 						_fftResults[FFT_SAMPLE_COUNT / 2];
+	float32_t 						_spectrumBuffer[FFT_SAMPLE_COUNT];
+	float32_t 						_absSpectrumBuffer[FFT_SAMPLE_COUNT];
 };
 
 

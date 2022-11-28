@@ -23,8 +23,8 @@ void MovingAvgFilter::InitRingBuffer()
 	InitColorRingBuffer(_ringBufferRedBrightness, _filterOrders.RedBrightness, &_currentNodeRedBrightness, true);
 	InitColorRingBuffer(_ringBufferGreenBrightness, _filterOrders.GreenBrightness, &_currentNodeGreenBrightness, true);
 	InitColorRingBuffer(_ringBufferBlueBrightness, _filterOrders.BlueBrightness, &_currentNodeBlueBrightness, true);
-	InitVoltageRingBuffer(_ringBufferVoltage, _filterOrders.Voltage, &_currentNodeVoltage, 150.f);
-	InitVoltageRingBuffer(_ringBufferPeakVoltage, _filterOrders.PeakVoltage, &_currentNodePeakVoltage, 150.0f);
+	InitVoltageRingBuffer(_ringBufferVoltage, _filterOrders.Voltage, &_currentNodeVoltage, 20.f);
+	InitVoltageRingBuffer(_ringBufferPeakVoltage, _filterOrders.PeakVoltage, &_currentNodePeakVoltage, 50.0f);
 }
 
 void MovingAvgFilter::AddBrightnessValue(RgbLedBrightness brightness)
@@ -63,10 +63,8 @@ void MovingAvgFilter::AddPeakVoltageValue(float32_t voltage)
 void MovingAvgFilter::InitColorRingBuffer(RingBufferNodeColorAmplitude* ringBuffer, uint16_t order, 
 	RingBufferNodeColorAmplitude** _currentNode, bool clearRingBuffer)
 {
-	if(order > COLOR_FILTER_ORDER_MAX)
-	{
-		order = COLOR_FILTER_ORDER_MAX;
-	}
+	// Watch out for the maximum limit
+	order = order > COLOR_FILTER_ORDER_MAX ? COLOR_FILTER_ORDER_MAX : order;
 
 	// Init ring buffer
 	for(uint16_t i = order - 1; i > 0; i--)
@@ -85,8 +83,6 @@ void MovingAvgFilter::InitColorRingBuffer(RingBufferNodeColorAmplitude* ringBuff
 	// Last element points to start
 	ringBuffer[order - 1].pNext = &ringBuffer[0];
 
-	uint16_t initValue = 0;
-
 	// If clearing is not necessary, set all the values to the last value
 	if(clearRingBuffer)
 	{
@@ -99,6 +95,171 @@ void MovingAvgFilter::InitColorRingBuffer(RingBufferNodeColorAmplitude* ringBuff
 
 	*_currentNode = &ringBuffer[0];
 }
+
+
+// Increases/decreases the filter order with adding or removing nodes of the ringbuffer. The Current Node stays the same if order value has decreased
+RingBufferNodeVoltage* MovingAvgFilter::ChangeVoltageRingBufferOrder(uint16_t order, RingBufferNodeVoltage* ringBuffer, RingBufferNodeVoltage* currentNode, VoltageFilterSelection selection)
+{
+	// Watch out for the upper limit
+	uint16_t newOrder = order > VOLTAGE_FILTER_ORDER_MAX ? VOLTAGE_FILTER_ORDER_MAX : order;
+
+	uint16_t currentOrder = 0;
+	int16_t orderDiff = 0;
+
+	switch(selection)
+	{
+		case Voltage:
+			orderDiff = _filterOrders.Voltage - newOrder;
+			currentOrder = _filterOrders.Voltage;
+
+			break;
+
+		case PeakVoltage:
+			orderDiff = _filterOrders.PeakVoltage - newOrder;
+			currentOrder = _filterOrders.PeakVoltage;
+
+			break;
+	}
+
+	// No Change
+	if(orderDiff == 0)
+		return currentNode;
+
+	RingBufferNodeVoltage* newEnd = currentNode;
+
+	// New order is smaller than the current one
+	if(orderDiff > 0)
+	{
+		// Cut out the last nodes and connect the ends again
+
+		// Go to the new end
+		for(uint16_t i = 0; i < newOrder; i++)
+		{
+			newEnd = newEnd->pPrev;
+		}
+
+		// Now go further until we reach the previous end
+		RingBufferNodeVoltage* prevEnd = newEnd;
+
+		for(uint16_t i = 0; i < orderDiff; i++)
+		{
+			prevEnd = prevEnd->pPrev;
+		}
+
+		// Connect the two "ends" together
+		// NewEnd pPrev points to pPrev from pNew
+		newEnd->pPrev = prevEnd->pPrev;
+
+		return currentNode;
+	}
+
+	// New order is larger
+	if(orderDiff < 0)
+	{
+		uint16_t newElementCnt = abs(orderDiff);
+
+		// Append new nodes at the current node
+		for(uint16_t offset = 0; offset < newElementCnt; offset++)
+		{
+			RingBufferNodeVoltage* nextAvailableNode = &ringBuffer[currentOrder - 1 + offset];
+			nextAvailableNode->voltage = currentNode->voltage;
+			
+			currentNode->pNext = nextAvailableNode;
+
+			// Move one new node forward
+			currentNode = currentNode->pNext; 
+		}
+
+		return currentNode;
+	}
+
+	return currentNode;
+}
+
+RingBufferNodeColorAmplitude* MovingAvgFilter::ChangeColorRingBufferOrder(uint16_t order, RingBufferNodeColorAmplitude* ringBuffer, RingBufferNodeColorAmplitude* currentNode, ColorSelection selection)
+{
+	// Watch out for the maximum limit
+	uint16_t newOrder = order > VOLTAGE_FILTER_ORDER_MAX ? VOLTAGE_FILTER_ORDER_MAX : order;
+	uint16_t currentOrder = 0;
+	int16_t orderDiff = 0;
+
+	switch(selection)
+	{
+		case Red:
+			orderDiff = _filterOrders.RedBrightness - newOrder;
+			currentOrder = _filterOrders.RedBrightness;
+
+			break;
+
+		case Green:
+			orderDiff = _filterOrders.GreenBrightness - newOrder;
+			currentOrder = _filterOrders.GreenBrightness;
+
+			break;
+
+		case Blue:
+			orderDiff = _filterOrders.BlueBrightness - newOrder;
+			currentOrder = _filterOrders.BlueBrightness;
+
+			break;
+	}
+
+	// No Change
+	if(orderDiff == 0)
+		return currentNode;
+
+	RingBufferNodeColorAmplitude* newEnd = currentNode;
+
+	// New order is smaller than the current one
+	if(orderDiff > 0)
+	{
+		// Cut out the last nodes and connect the ends again
+
+		// Go to the new end
+		for(uint16_t i = 0; i < newOrder; i++)
+		{
+			newEnd = newEnd->pPrev;
+		}
+
+		// Now go further until we reach the previous end
+		RingBufferNodeColorAmplitude* prevEnd = newEnd;
+
+		for(uint16_t i = 0; i < orderDiff; i++)
+		{
+			prevEnd = prevEnd->pPrev;
+		}
+
+		// Connect the two "ends" together
+		// NewEnd pPrev points to pPrev from pNew
+		newEnd->pPrev = prevEnd->pPrev;
+
+		return currentNode;
+	}
+
+	// New order is larger
+	if(orderDiff < 0)
+	{
+		uint16_t newElementCnt = abs(orderDiff);
+
+		// Append new nodes at the current node
+		for(uint16_t offset = 0; offset < newElementCnt; offset++)
+		{
+			RingBufferNodeColorAmplitude* nextAvailableNode = &ringBuffer[currentOrder - 1 + offset];
+
+			// Assign the current brightness value to the new element
+			nextAvailableNode->brightness = currentNode->brightness;
+			currentNode->pNext = nextAvailableNode;
+
+			// Move one new node forward
+			currentNode = currentNode->pNext; 
+		}
+
+		return currentNode;
+	}
+
+	return currentNode;
+}
+
 
 void MovingAvgFilter::InitVoltageRingBuffer(RingBufferNodeVoltage* ringBuffer, uint16_t order, RingBufferNodeVoltage** _currentNode, float32_t initValue)
 {
@@ -207,42 +368,52 @@ void MovingAvgFilter::SetFilterOrder(FilterLevels orders, bool clearRingBuffer)
 	{
 		_filterOrders.RedBrightness = orders.RedBrightness;
 
-		InitColorRingBuffer(_ringBufferRedBrightness, _filterOrders.RedBrightness, &_currentNodeRedBrightness, 
-			clearRingBuffer);
+		_currentNodeRedBrightness = ChangeColorRingBufferOrder(_filterOrders.RedBrightness, _ringBufferRedBrightness, _currentNodeRedBrightness, Red);
+
+		// InitColorRingBuffer(_ringBufferRedBrightness, _filterOrders.RedBrightness, &_currentNodeRedBrightness, 
+		// 	clearRingBuffer);
 		
-		_elementCounterRed = 0;
+		//_elementCounterRed = 0;
 	}
 
 	if(orders.GreenBrightness != _filterOrders.GreenBrightness)
 	{
 		_filterOrders.GreenBrightness = orders.GreenBrightness;
+		
+		_currentNodeGreenBrightness = ChangeColorRingBufferOrder(_filterOrders.GreenBrightness, _ringBufferGreenBrightness, _currentNodeGreenBrightness, Green);
 
-		InitColorRingBuffer(_ringBufferGreenBrightness, _filterOrders.GreenBrightness, &_currentNodeGreenBrightness, 
-			clearRingBuffer);
+		// InitColorRingBuffer(_ringBufferGreenBrightness, _filterOrders.GreenBrightness, &_currentNodeGreenBrightness, 
+		// 	clearRingBuffer);
 
-		_elementCounterGreen = 0;
+		// _elementCounterGreen = 0;
 	}
 
 	if(orders.BlueBrightness != _filterOrders.BlueBrightness)
 	{
 		_filterOrders.BlueBrightness = orders.BlueBrightness;
 
-		InitColorRingBuffer(_ringBufferBlueBrightness, _filterOrders.BlueBrightness, &_currentNodeBlueBrightness, 
-			clearRingBuffer);
+		_currentNodeBlueBrightness = ChangeColorRingBufferOrder(_filterOrders.BlueBrightness, _ringBufferBlueBrightness, _currentNodeBlueBrightness, Blue);
 
-		_elementCounterBlue = 0;
+		// InitColorRingBuffer(_ringBufferBlueBrightness, _filterOrders.BlueBrightness, &_currentNodeBlueBrightness, 
+		// 	clearRingBuffer);
+
+		// _elementCounterBlue = 0;
 	}
 
 	if(orders.Voltage != _filterOrders.Voltage)
 	{
 		_filterOrders.Voltage = orders.Voltage;
-		InitVoltageRingBuffer(_ringBufferVoltage, _filterOrders.Voltage, &_currentNodeVoltage, 150.0f);
+
+		_currentNodeVoltage = ChangeVoltageRingBufferOrder(_filterOrders.Voltage,_ringBufferVoltage, _currentNodeVoltage, Voltage);
+		// InitVoltageRingBuffer(_ringBufferVoltage, _filterOrders.Voltage, &_currentNodeVoltage, 20.0f);
 	}
 
 	if(orders.PeakVoltage != _filterOrders.PeakVoltage)
 	{
 		_filterOrders.PeakVoltage = orders.PeakVoltage;
-		InitVoltageRingBuffer(_ringBufferPeakVoltage, _filterOrders.PeakVoltage, &_currentNodePeakVoltage, 200.0f);
+		
+		_currentNodeVoltage = ChangeVoltageRingBufferOrder(_filterOrders.Voltage,_ringBufferVoltage, _currentNodeVoltage, PeakVoltage);
+		//InitVoltageRingBuffer(_ringBufferPeakVoltage, _filterOrders.PeakVoltage, &_currentNodePeakVoltage, 20.0f);
 	}
 }
 

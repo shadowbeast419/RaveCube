@@ -8,6 +8,11 @@
     "C_Cpp.default.cStandard": "gnu17",
     "C_Cpp.default.cppStandard": "gnu++20",
     "files.associations": {
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "arm_math.h": "c"
+    },
+    "files.exclude": {
+        "**/*q15*.c" : true,
+        "**/*q31*.c" : true
     }
 }

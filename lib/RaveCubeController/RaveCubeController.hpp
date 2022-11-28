@@ -16,17 +16,34 @@
 
 #define CTRL_TX_BUFFER_LENGTH 256
 
+/* enum RaveCubeCommand
+{
+	ColorFilter = 0,
+	VoltageFilter = 1,
+	FrequencyBoundaries = 2,
+	BrigthnessFactors = 3,
+	LEDStatus = 4,
+	GammaStatus = 5,
+	StreamData = 6,
+	Settings = 7,
+};
+*/
+
+// static const char* _commandPalette[] = {"filterc", "filterv", "fboundaries", "bfactors", "led_status", "gamma_status", "sdata", "settings"};
+
+
 class RaveCubeController
 {
 private:
 	LedController* 		_ledCtrlInstance;
 	UartController* 	_uartCtrlInstance;
 	SettingsController* _settingsCtrlInstance;
-	uint8_t				_streamBrightnessValuesEnable = RESET;
-	uint8_t				_streamAmplitudeValuesEnable = RESET;
+	bool				_streamBrightnessValuesEnable = false;
+	bool				_streamAmplitudeValuesEnable = false;
 	uint8_t				_dataStreamCounter = 0;
-	uint8_t				_dataStreamDivider = 2;
-	uint8_t*			_invalidString = (uint8_t*)"Invalid command! \n";
+	uint8_t				_dataStreamDivider = 10;
+	uint8_t* 			_invalidString = (uint8_t*)"Invalid command! \n";
+
 
 	void ChangeFilterOrder(uint8_t* cmdStr);
 	void ChangeBoundaries(uint8_t* cmdStr);
@@ -37,6 +54,7 @@ private:
 	void ChangeStreamingBrightnessValuesEnable(uint8_t* cmdStr);
 	void ChangeStreamingAmplitudeValuesEnable(uint8_t* cmdStr);
 	void UpdateFilterOrders(FilterLevels orders, bool saveToEEPROM);
+	// RaveCubeCommand GetCommandFromString(char* str);
 
 	void SendData();
 

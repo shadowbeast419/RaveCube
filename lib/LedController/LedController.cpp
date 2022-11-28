@@ -28,7 +28,6 @@ void LedController::Init(SettingsController* settingsCtrl)
 	this->InitLedMatrix();
 	this->InitPwm();
 }
-
 void LedController::InitLedMatrix()
 {
 	// Initialize the first 3 LEDs as reset pulse
@@ -77,7 +76,7 @@ void LedController::PeakTimerPeriodElapsedHandler(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance == _peakTimer.instance)
 	{
-		if(_peakRmsVoltage > 12.0f)
+		if(_peakRmsVoltage > 15.0f)
 		{
 			_movAvgFilter.AddPeakVoltageValue(_peakRmsVoltage);
 		}
@@ -147,11 +146,15 @@ void LedController::UpdatePwmSettingsBuffer(uint32_t ledIndexTmp, uint8_t ledIsO
 	}
 }
 
-RgbLedBrightness LedController::CalculateBrightness(FFT_Result* fftResult, float32_t rmsVoltage)
+void LedController::CalculateBrightness(FFT_Result* fftResult, float32_t rmsVoltage, bool startupIterationsComplete)
 {
 	float32_t voltageRatio = 0.0f;
 
 	_movAvgFilter.AddVoltageValue(rmsVoltage);
+
+	if(!startupIterationsComplete)
+		return;
+
 	_filteredRmsVoltage = _movAvgFilter.GetAverageVoltage();
 
 	if(_filteredRmsVoltage > _peakRmsVoltage)
@@ -179,13 +182,9 @@ RgbLedBrightness LedController::CalculateBrightness(FFT_Result* fftResult, float
 
 #ifdef USE_HSV
 
-
-//
-//	voltageRatio = (_filteredRmsVoltage / _peakRmsVoltage);
-
 	if(_filteredPeakRmsVoltage > 0.0f)
 	{
-		voltageRatio = (_filteredRmsVoltage / _filteredPeakRmsVoltage);
+		voltageRatio = (_filteredRmsVoltage / _filteredPeakRmsVoltage) * _brightnessMultiplicator;
 	}
 
 	HSVBrightness hsvParamsRed = CalculateHSVBrightness(fftResult, voltageRatio, Red);
@@ -228,8 +227,6 @@ RgbLedBrightness LedController::CalculateBrightness(FFT_Result* fftResult, float
 		_currentBrightness.Green = gamma8[_currentBrightness.Green];
 		_currentBrightness.Blue = gamma8[_currentBrightness.Blue];
 	}
-
-	return _currentBrightness;
 }
 
 void LedController::UpdateLEDColor()
@@ -610,7 +607,6 @@ RgbLedBrightness LedController::PrioritizeStrongestColor(RgbLedBrightness bright
 	if(lowestBrightness > _prioThreshold && middleBrightness > _prioThreshold && highestBrightness > _prioThreshold)
 	{
 		brightnessArray[lowestIndex] *= _prioAttenuation;
-		brightnessArray[middleIndex] *= _prioAttenuation;
 	}
 
 	brightness.Red = brightnessArray[0];
@@ -660,6 +656,16 @@ float32_t LedController::GetRMSVoltage()
 float32_t LedController::GetPeakRMSVoltage()
 {
 	return _filteredPeakRmsVoltage;
+}
+
+void LedController::SetBrightnessMultiplicator(float32_t brightnessMultiplicator)
+{
+	_brightnessMultiplicator = brightnessMultiplicator;
+}
+
+float32_t LedController::GetBrightnessMultiplicator()
+{
+	return _brightnessMultiplicator;
 }
 
 LedController::~LedController()

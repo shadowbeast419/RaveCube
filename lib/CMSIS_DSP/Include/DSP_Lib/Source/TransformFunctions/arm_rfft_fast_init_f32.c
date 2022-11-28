@@ -89,7 +89,7 @@ arm_status arm_rfft_fast_init_f32(
 		Sint->pTwiddle     = (float32_t *) twiddleCoef_2048;
 		S->pTwiddleRFFT    = (float32_t *) twiddleCoef_rfft_4096;
     break;
-    #endif
+  
   case 1024u:
     Sint->bitRevLength = ARMBITREVINDEXTABLE1024_TABLE_LENGTH;
     Sint->pBitRevTable = (uint16_t *)armBitRevIndexTable1024;
@@ -102,18 +102,21 @@ arm_status arm_rfft_fast_init_f32(
 		Sint->pTwiddle     = (float32_t *) twiddleCoef_512;
 		S->pTwiddleRFFT    = (float32_t *) twiddleCoef_rfft_1024;
     break;
+
   case 256u:
     Sint->bitRevLength = ARMBITREVINDEXTABLE_256_TABLE_LENGTH;
     Sint->pBitRevTable = (uint16_t *)armBitRevIndexTable256;
 		Sint->pTwiddle     = (float32_t *) twiddleCoef_256;
 		S->pTwiddleRFFT    = (float32_t *) twiddleCoef_rfft_512;
     break;
+  #endif
   case 128u:
     Sint->bitRevLength = ARMBITREVINDEXTABLE_128_TABLE_LENGTH;
     Sint->pBitRevTable = (uint16_t *)armBitRevIndexTable128;
 		Sint->pTwiddle     = (float32_t *) twiddleCoef_128;
 		S->pTwiddleRFFT    = (float32_t *) twiddleCoef_rfft_256;
     break;
+  #ifndef SAVE_FLASH
   case 64u:
     Sint->bitRevLength = ARMBITREVINDEXTABLE__64_TABLE_LENGTH;
     Sint->pBitRevTable = (uint16_t *)armBitRevIndexTable64;
@@ -132,6 +135,7 @@ arm_status arm_rfft_fast_init_f32(
 		Sint->pTwiddle     = (float32_t *) twiddleCoef_16;
 		S->pTwiddleRFFT    = (float32_t *) twiddleCoef_rfft_32;
     break;
+  #endif
   default:
     /*  Reporting argument error if fftSize is not valid value */
     status = ARM_MATH_ARGUMENT_ERROR;

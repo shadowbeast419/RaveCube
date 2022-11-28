@@ -43,6 +43,7 @@ private:
 	void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c);
 	HAL_StatusTypeDef HAL_I2C_Init(I2C_HandleTypeDef *hi2c);
 	void HAL_I2C_ClearBusyFlagErrata_2_14_7(I2C_HandleTypeDef *hi2c);
+	uint32_t NextPowerOfTwo(uint32_t x); 
 
 public:
 	I2CController();

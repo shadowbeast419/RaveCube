@@ -63,7 +63,7 @@ void RaveCubeController::ExecuteCommand(uint8_t* cmdStr)
 void RaveCubeController::ChangeStreamingBrightnessValuesEnable(uint8_t* cmdStr)
 {
 	char* pSplittedStr = strtok((char*)cmdStr, " ");
-	uint8_t streamingStatus = RESET;
+	bool streamingStatus = false;
 
 	for(uint8_t i = 0; pSplittedStr != NULL; i++)
 	{
@@ -116,7 +116,7 @@ void RaveCubeController::UpdateFilterOrders(FilterLevels orders, bool saveToEEPR
 			(orders.GreenBrightness >= COLOR_FILTER_ORDER_MIN) && (orders.GreenBrightness < COLOR_FILTER_ORDER_MAX) &&
 			(orders.BlueBrightness >= COLOR_FILTER_ORDER_MIN) && (orders.BlueBrightness < COLOR_FILTER_ORDER_MAX) &&
 			(orders.Voltage >= 3) && (orders.Voltage <= VOLTAGE_FILTER_ORDER_MAX) &&
-			(orders.PeakVoltage >= 3) && (orders.PeakVoltage <= VOLTAGE_FILTER_ORDER_MAX))
+			(orders.PeakVoltage >= 3) && (orders.PeakVoltage <= PEAK_VOLTAGE_FILTER_ORDER_MAX))
 	{
 		_settingsCtrlInstance->settingsData.filterOrders = orders;
 		_ledCtrlInstance->SetFilterOrder(orders, false);

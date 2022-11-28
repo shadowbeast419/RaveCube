@@ -11,7 +11,7 @@
 #include "stm32g4xx_hal.h"
 #include <cstring>
 
-#define RX_BUFFER_LENGTH 64
+#define RX_BUFFER_LENGTH 128
 #define TX_BUFFER_LENGTH 128
 
 class UartController

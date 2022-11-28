@@ -41,15 +41,14 @@ void VoltageSignal::UpdateAdcValues(uint16_t* adcValues)
 
 	for(uint32_t i = 0; i < FFT_SAMPLE_COUNT; i++)
 	{
-		// Apply scaling factor for better accuracy in FFT
-		_voltageValues[i] = (int16_t)((float32_t)adcValues[i] * (2971.0f * VOLTAGE_SCALING_FACTOR  / (float32_t)0xFFF));
+		_voltageValues[i] = ((float32_t)adcValues[i] * (2971.0f * VoltageScalingFactor  / (float32_t)0xFFF));
 		sum += _voltageValues[i];
 	}
 
 	average = sum / FFT_SAMPLE_COUNT;
 	_offsetVoltage = average;
 
-	// Remove DC part and calculate peak voltage
+	// Remove DC part
 	for(uint32_t i = 0; i < FFT_SAMPLE_COUNT; i++)
 	{
 		_voltageValues[i] -= average;
@@ -57,21 +56,21 @@ void VoltageSignal::UpdateAdcValues(uint16_t* adcValues)
 	}
 
 	squaredSum /= FFT_SAMPLE_COUNT;
-	_rmsValue = (uint16_t)sqrtf(squaredSum);
+	_rmsValue = sqrtf(squaredSum);
 
 }
 
 float32_t VoltageSignal::GetRMSValue()
 {
-	return _rmsValue / VOLTAGE_SCALING_FACTOR;
+	return _rmsValue;
 }
 
-int16_t* VoltageSignal::GetSignal()
+float32_t* VoltageSignal::GetSignal()
 {
 #ifdef ENABLE_WINDOWING
 	for(uint16_t i = 0; i < FFT_SAMPLE_COUNT; i++)
 	{
-		_voltageValues[i] = (int16_t)(_voltageValues[i] * _windowWeights[i]);
+		_voltageValues[i] = _voltageValues[i] * _windowWeights[i];
 	}
 #endif
 

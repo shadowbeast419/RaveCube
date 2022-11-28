@@ -84,6 +84,8 @@ void arm_split_rifft_q15(
 * \image html RIFFTQ15.gif "Input and Output Formats for Q15 RIFFT"    
 */
 
+#ifndef SAVE_FLASH
+
 void arm_rfft_q15(
     const arm_rfft_instance_q15 * S,
     q15_t * pSrc,
@@ -120,6 +122,8 @@ void arm_rfft_q15(
                             S->pTwiddleBReal, pDst, S->twidCoefRModifier);
     }
 }
+
+#endif
 
 /**    
 * @} end of RealFFT group    

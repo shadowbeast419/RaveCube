@@ -20,8 +20,8 @@ protected:
 	static const uint32_t					_pwmFrequency = 800000;
 	static const uint32_t					_dutyCycleLow = 32;
 	static const uint32_t					_dutyCycleHigh = 64;
-	static const uint32_t 					_ledCount = 142;
-	static const uint32_t					_resetOffset = 3;
+	static const uint32_t 					_ledCount = 64;
+	static const uint32_t					_resetOffset = 5;
 	RgbLedBrightness 						_led_matrix[_ledCount + _resetOffset];
 	static const uint32_t					_pwmDmaBufferSize = 48;
 	uint32_t 								_aCCValueBuffer[_pwmDmaBufferSize];

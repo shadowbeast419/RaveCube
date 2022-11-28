@@ -38,6 +38,8 @@
 * POSSIBILITY OF SUCH DAMAGE.
  * -------------------------------------------------------------------- */
 
+#define SAVE_FLASH
+
 /**
    \mainpage CMSIS DSP Software Library
    *
@@ -2153,6 +2155,8 @@ void arm_cfft_q31(
   uint8_t ifftFlag,
   uint8_t bitReverseFlag);
 
+  #ifndef SAVE_FLASH
+
   /**
    * @brief Instance structure for the Q15 RFFT/RIFFT function.
    */
@@ -2202,6 +2206,8 @@ void arm_cfft_q31(
   const arm_rfft_instance_q31 * S,
   q31_t * pSrc,
   q31_t * pDst);
+
+  #endif
 
   /**
    * @brief Instance structure for the floating-point RFFT/RIFFT function.
@@ -2295,6 +2301,8 @@ void arm_rfft_fast_f32(
   float32_t * pInlineBuffer);
 
 
+  #ifndef SAVE_FLASH
+
   /**
    * @brief Instance structure for the Q31 DCT4/IDCT4 function.
    */
@@ -2375,6 +2383,7 @@ void arm_rfft_fast_f32(
   q15_t normalize);
 
 
+
   /**
    * @brief Processing function for the Q15 DCT4/IDCT4.
    * @param[in]     S              points to an instance of the Q15 DCT4 structure.
@@ -2386,6 +2395,7 @@ void arm_rfft_fast_f32(
   q15_t * pState,
   q15_t * pInlineBuffer);
 
+  #endif
 
   /**
    * @brief Floating-point vector addition.

@@ -60,9 +60,15 @@ private:
 	float32_t								_filteredRmsVoltage = 0.0f;
 	float32_t								_peakRmsVoltage = 0.0f;
 	uint8_t									_dmaBufferNeedsUpdate = SET;
-	LargeIntervalTimer						_peakTimer = LargeIntervalTimer(TIM4, 0.5f);
+	LargeIntervalTimer						_peakTimer = LargeIntervalTimer(TIM4, 0.1f);
+
+	float32_t								_brightnessMultiplicator = 1.5f;
+
+	/// @brief For Priotizing strongest Color (not used)
 	uint16_t 								_prioThreshold = 50;
+	/// @brief For Priotizing strongest Color (not used)
 	float32_t 								_prioAttenuation = 0.3f;
+
 	RgbLedBrightness						_brightnessBeforeReset = {0};
 
 	void InitLedMatrix();
@@ -91,7 +97,7 @@ public:
 	void Init(SettingsController* settingsCtrl);
 
 	uint8_t IsLedUpdateComplete();
-	RgbLedBrightness CalculateBrightness(FFT_Result* fftResult, float32_t peakVoltage);
+	void CalculateBrightness(FFT_Result* fftResult, float32_t peakVoltage, bool startupIterationsComplete);
 	RgbLedBrightness FilterBrightness(RgbLedBrightness brightness);
 	void UpdateLEDColor();
 
@@ -103,6 +109,9 @@ public:
 
 	float32_t GetRMSVoltage();
 	float32_t GetPeakRMSVoltage();
+
+	void SetBrightnessMultiplicator(float32_t brightnessMultiplicator);
+	float32_t GetBrightnessMultiplicator();
 
 	void ResetLedMatrix();
 };

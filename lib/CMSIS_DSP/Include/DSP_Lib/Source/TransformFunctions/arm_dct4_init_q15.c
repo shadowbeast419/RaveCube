@@ -41,6 +41,8 @@
 
 #include "arm_math.h"
 
+#define SAVE_FLASH
+#ifndef SAVE_FLASH
 /**    
  * @ingroup groupTransforms    
  */
@@ -73,6 +75,8 @@
 * In the tables below the real and imaginary values are placed alternatively, hence the    
 * array length is <code>2*N</code>.    
 */
+
+
 
 static const q15_t ALIGN4 WeightsQ15_128[256] = {
   0x7fff, 0x0, 0x7ffd, 0xfe6e, 0x7ff6, 0xfcdc, 0x7fe9, 0xfb4a,
@@ -4278,6 +4282,8 @@ arm_status arm_dct4_init_q15(
   /* return the status of DCT4 Init function */
   return (status);
 }
+
+#endif
 
 /**    
    * @} end of DCT4_IDCT4 group    

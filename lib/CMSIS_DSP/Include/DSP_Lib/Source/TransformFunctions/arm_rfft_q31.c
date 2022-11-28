@@ -84,6 +84,9 @@ void arm_split_rifft_q31(
 * \par    
 * \image html RIFFTQ31.gif "Input and Output Formats for Q31 RIFFT"    
 */
+
+#ifndef SAVE_FLASH
+
 void arm_rfft_q31(
     const arm_rfft_instance_q31 * S,
     q31_t * pSrc,
@@ -294,3 +297,5 @@ void arm_split_rifft_q31(
         fftLen--;
     }
 }
+
+#endif

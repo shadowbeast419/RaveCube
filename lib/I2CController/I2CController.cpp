@@ -160,8 +160,6 @@ void I2CController::HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
 		__HAL_RCC_I2C1_CLK_ENABLE();
 
 		/* USER CODE BEGIN SysInit */
-		__HAL_RCC_GPIOA_CLK_ENABLE();
-		__HAL_RCC_GPIOB_CLK_ENABLE();
 
 		// Configure PA5 and PA6 as floating input because of double use on STM32 Nucleo board
 		GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_6;
@@ -273,8 +271,12 @@ void I2CController::WriteDataEEPROM(SettingsFrame* data, uint8_t section)
 			sizeof(data->filterOrders) + sizeof(data->controlFlag) + sizeof(data->factors)
 			+ sizeof(data->gammaStatus) + sizeof(data->ledStatus);
 
-	TransmitData(section * EEPROM_SECTIONSIZE, dataToWrite);
-	HAL_Delay(EEPROM_WRITE * 2);
+	uint16_t roundedUpDataSize = NextPowerOfTwo(dataToWrite);
+
+	TransmitData(section * EEPROM_SECTIONSIZE, roundedUpDataSize);
+
+	// Clear transmit buffer
+	memset(_aTxBuffer, 0, roundedUpDataSize);
 }
 
 void I2CController::ReadDataEEPROM(SettingsFrame* data, uint8_t section)
@@ -319,15 +321,15 @@ void I2CController::TransmitData(uint16_t address, uint16_t size)
 	{
 		uint16_t diff = size - counter;
 
-		HAL_I2C_ClearBusyFlagErrata_2_14_7(&_hi2c1);
+		// HAL_I2C_ClearBusyFlagErrata_2_14_7(&_hi2c1);
 
 		if (diff >= EEPROM_MAXPKT)
 		{
-//				HAL_I2C_Master_Seq_Transmit_DMA();
+//			HAL_I2C_Master_Seq_Transmit_DMA();
 
 //			result = HAL_I2C_Master_Transmit_DMA(&_hi2c1, _devAddressWrite, &_aTxBuffer[counter], EEPROM_MAXPKT);
 
-//				//Multi-Byte
+//			//Multi-Byte
 			result = HAL_I2C_Mem_Write_DMA(&_hi2c1, _devAddressWrite,
 					address + counter, _medAddSize,
 					&_aTxBuffer[counter], EEPROM_MAXPKT);
@@ -376,7 +378,7 @@ void I2CController::ReceiveData(uint16_t address, uint16_t size)
 	{
 		uint16_t diff = size - counter;
 
-		HAL_I2C_ClearBusyFlagErrata_2_14_7(&_hi2c1);
+		// HAL_I2C_ClearBusyFlagErrata_2_14_7(&_hi2c1);
 
 		if (diff >= EEPROM_MAXPKT)
 		{
@@ -446,11 +448,11 @@ void I2CController::HAL_I2C_ClearBusyFlagErrata_2_14_7(I2C_HandleTypeDef *hi2c)
 	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_15, GPIO_PIN_SET);
 
-    // 3
-    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_RESET) {
+    // // 3
+    if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == GPIO_PIN_RESET) {
         for(;;){}
     }
-    if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_15) == GPIO_PIN_RESET) {
+	if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_7) == GPIO_PIN_RESET) {
         for(;;){}
     }
 
@@ -539,6 +541,13 @@ void I2CController::HAL_I2C_ClearBusyFlagErrata_2_14_7(I2C_HandleTypeDef *hi2c)
 
    // 15
    __HAL_I2C_ENABLE(hi2c);
+}
+
+// https://jameshfisher.com/2018/03/30/round-up-power-2/
+// Rounds number up to next power of 2
+uint32_t I2CController::NextPowerOfTwo(uint32_t x) 
+{ 	
+	return x == 1 ? 1 : 1<<(32-__builtin_clz(x-1)); 
 }
 
 void I2CController::TxCompleteHandler(I2C_HandleTypeDef *hi2c)

@@ -43,6 +43,8 @@
 
 #include "arm_math.h"
 
+#define SAVE_FLASH
+
 extern const uint16_t armBitRevTable[1024];
 extern const q15_t armRecipTableQ15[64];
 extern const q31_t armRecipTableQ31[64];
@@ -58,6 +60,8 @@ extern const float32_t twiddleCoef_1024[2048];
 extern const float32_t twiddleCoef_2048[4096];
 extern const float32_t twiddleCoef_4096[8192];
 #define twiddleCoef twiddleCoef_4096
+
+#ifndef SAVE_FLASH
 extern const q31_t twiddleCoef_16_q31[24];
 extern const q31_t twiddleCoef_32_q31[48];
 extern const q31_t twiddleCoef_64_q31[96];
@@ -66,7 +70,12 @@ extern const q31_t twiddleCoef_256_q31[384];
 extern const q31_t twiddleCoef_512_q31[768];
 extern const q31_t twiddleCoef_1024_q31[1536];
 extern const q31_t twiddleCoef_2048_q31[3072];
+#endif
+
+// Used for init (??)
 extern const q31_t twiddleCoef_4096_q31[6144];
+
+#ifndef SAVE_FLASH
 extern const q15_t twiddleCoef_16_q15[24];
 extern const q15_t twiddleCoef_32_q15[48];
 extern const q15_t twiddleCoef_64_q15[96];
@@ -75,18 +84,29 @@ extern const q15_t twiddleCoef_256_q15[384];
 extern const q15_t twiddleCoef_512_q15[768];
 extern const q15_t twiddleCoef_1024_q15[1536];
 extern const q15_t twiddleCoef_2048_q15[3072];
+#endif
+
+// Used for Init (??)
 extern const q15_t twiddleCoef_4096_q15[6144];
+
+#ifndef SAVE_FLASH
 extern const float32_t twiddleCoef_rfft_32[32];
 extern const float32_t twiddleCoef_rfft_64[64];
 extern const float32_t twiddleCoef_rfft_128[128];
+#endif
+
 extern const float32_t twiddleCoef_rfft_256[256];
+
+#ifndef SAVE_FLASH
 extern const float32_t twiddleCoef_rfft_512[512];
 extern const float32_t twiddleCoef_rfft_1024[1024];
 extern const float32_t twiddleCoef_rfft_2048[2048];
 extern const float32_t twiddleCoef_rfft_4096[4096];
-
+#endif
 
 /* floating-point bit reversal tables */
+
+
 #define ARMBITREVINDEXTABLE__16_TABLE_LENGTH ((uint16_t)20  )
 #define ARMBITREVINDEXTABLE__32_TABLE_LENGTH ((uint16_t)48  )
 #define ARMBITREVINDEXTABLE__64_TABLE_LENGTH ((uint16_t)56  )
@@ -97,15 +117,19 @@ extern const float32_t twiddleCoef_rfft_4096[4096];
 #define ARMBITREVINDEXTABLE2048_TABLE_LENGTH ((uint16_t)3808)
 #define ARMBITREVINDEXTABLE4096_TABLE_LENGTH ((uint16_t)4032)
 
+
+#ifndef SAVE_FLASH
 extern const uint16_t armBitRevIndexTable16[ARMBITREVINDEXTABLE__16_TABLE_LENGTH];
 extern const uint16_t armBitRevIndexTable32[ARMBITREVINDEXTABLE__32_TABLE_LENGTH];
 extern const uint16_t armBitRevIndexTable64[ARMBITREVINDEXTABLE__64_TABLE_LENGTH];
+#endif
+
 extern const uint16_t armBitRevIndexTable128[ARMBITREVINDEXTABLE_128_TABLE_LENGTH];
+
+#ifndef SAVE_FLASH
 extern const uint16_t armBitRevIndexTable256[ARMBITREVINDEXTABLE_256_TABLE_LENGTH];
 extern const uint16_t armBitRevIndexTable512[ARMBITREVINDEXTABLE_512_TABLE_LENGTH];
 extern const uint16_t armBitRevIndexTable1024[ARMBITREVINDEXTABLE1024_TABLE_LENGTH];
-
-#ifndef SAVE_FLASH
 extern const uint16_t armBitRevIndexTable2048[ARMBITREVINDEXTABLE2048_TABLE_LENGTH];
 extern const uint16_t armBitRevIndexTable4096[ARMBITREVINDEXTABLE4096_TABLE_LENGTH];
 #endif
@@ -121,6 +145,7 @@ extern const uint16_t armBitRevIndexTable4096[ARMBITREVINDEXTABLE4096_TABLE_LENG
 #define ARMBITREVINDEXTABLE_FIXED_2048_TABLE_LENGTH ((uint16_t)1984)
 #define ARMBITREVINDEXTABLE_FIXED_4096_TABLE_LENGTH ((uint16_t)4032)
 
+#ifndef SAVE_FLASH
 extern const uint16_t armBitRevIndexTable_fixed_16[ARMBITREVINDEXTABLE_FIXED___16_TABLE_LENGTH];
 extern const uint16_t armBitRevIndexTable_fixed_32[ARMBITREVINDEXTABLE_FIXED___32_TABLE_LENGTH];
 extern const uint16_t armBitRevIndexTable_fixed_64[ARMBITREVINDEXTABLE_FIXED___64_TABLE_LENGTH];
@@ -129,10 +154,10 @@ extern const uint16_t armBitRevIndexTable_fixed_256[ARMBITREVINDEXTABLE_FIXED__2
 extern const uint16_t armBitRevIndexTable_fixed_512[ARMBITREVINDEXTABLE_FIXED__512_TABLE_LENGTH];
 extern const uint16_t armBitRevIndexTable_fixed_1024[ARMBITREVINDEXTABLE_FIXED_1024_TABLE_LENGTH];
 extern const uint16_t armBitRevIndexTable_fixed_2048[ARMBITREVINDEXTABLE_FIXED_2048_TABLE_LENGTH];
-
-#ifndef SAVE_FLASH
-extern const uint16_t armBitRevIndexTable_fixed_4096[ARMBITREVINDEXTABLE_FIXED_4096_TABLE_LENGTH];
 #endif
+
+extern const uint16_t armBitRevIndexTable_fixed_4096[ARMBITREVINDEXTABLE_FIXED_4096_TABLE_LENGTH];
+
 
 /* Tables for Fast Math Sine and Cosine */
 extern const float32_t sinTable_f32[FAST_MATH_TABLE_SIZE + 1];

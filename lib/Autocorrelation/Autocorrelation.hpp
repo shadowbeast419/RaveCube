@@ -22,7 +22,7 @@ struct CorrelationCoefficients
     float32_t Blue;
 };
 
-#define MAX_SEQUENCE_INTERVALS 85
+#define MAX_SEQUENCE_INTERVALS 80
 
 class Autocorrelation
 {
@@ -40,8 +40,8 @@ public:
     uint16_t                        GetDataCount();
     void                            ClearRingBuffer();
     const float32_t                 InvalidLagValue = -100.0f;
-    uint16_t                        MinLag = 15;
-    uint16_t                        MaxLag = 80;
+    uint16_t                        MinLag = 10;
+    uint16_t                        MaxLag = MAX_SEQUENCE_INTERVALS;
 
 
 private:

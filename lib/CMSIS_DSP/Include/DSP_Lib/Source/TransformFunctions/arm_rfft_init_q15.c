@@ -43,6 +43,8 @@
 #include "arm_common_tables.h"
 #include "arm_const_structs.h"
 
+#ifndef SAVE_FLASH
+
 /**    
 * @ingroup groupTransforms    
 */
@@ -2157,6 +2159,7 @@ static const q15_t ALIGN4 realCoefBQ15[8192] = {
 * \par    
 * This function also initializes Twiddle factor table.     
 */
+
 arm_status arm_rfft_init_q15(
     arm_rfft_instance_q15 * S,
     uint32_t fftLenReal,
@@ -2184,12 +2187,10 @@ arm_status arm_rfft_init_q15(
     /*  Initialization of coef modifier depending on the FFT length */
     switch (S->fftLenReal)
     {
-        #ifndef SAVE_FLASH
     case 8192u:
         S->twidCoefRModifier = 1u;
         S->pCfft = &arm_cfft_sR_q15_len4096;
         break;
-        #endif
     case 4096u:
         S->twidCoefRModifier = 2u;
         S->pCfft = &arm_cfft_sR_q15_len2048;
@@ -2232,6 +2233,7 @@ arm_status arm_rfft_init_q15(
     return (status);
 }
 
+#endif
 /**    
 * @} end of RealFFT group    
 */
