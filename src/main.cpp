@@ -53,14 +53,22 @@
 #include <RaveCubeController.hpp>
 #include <I2CController.hpp>
 #include <BeatDetector.hpp>
+#include <RaveCubeCommand.hpp>
+#include <BoundaryCommand.hpp>
+#include <FilterCommand.hpp>
+#include <FactorCommand.hpp>
 
 Adc1* adc1;
-UartController uart2;
+
 LedController* ledCtrl;
 I2CController* i2c;
-VoltageSignal vSignal;
-FFT fft;
 FFT_Result* fftResult;
+
+// Declare globally to see the RAM usage
+UartController uart2;
+VoltageSignal vSignal;
+MovingAvgFilter movingAvgFilter;
+FFT fft;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -88,23 +96,25 @@ int main(void)
 	__HAL_RCC_DMA1_CLK_ENABLE();
 	__HAL_RCC_DMA2_CLK_ENABLE();
 
-	//	GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-	//	/*Configure GPIO pin : AdcTim Interrupt Toggle */
-	//	GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_4 ;
-	//	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	//	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	//	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-	//	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
 	i2c->Init();
-	SettingsController settingsCtrl(i2c);
-
 	adc1->Init();
 	uart2.Init();
-	ledCtrl->Init(&settingsCtrl);
+
+	SettingsController settingsCtrl(i2c);
+
+	ledCtrl->Init(&movingAvgFilter, &settingsCtrl);
+
+	RaveCubeCommand* raveCubeCommand[3];
+	FilterCommand filterCommand(&uart2, i2c, &movingAvgFilter);
+	FactorCommand factorCommmand(&uart2, i2c, ledCtrl);
+	BoundaryCommand boundaryCommand(&uart2, i2c, ledCtrl);
+
+	raveCubeCommand[0] = &filterCommand;
+	raveCubeCommand[1] = &factorCommmand;
+	raveCubeCommand[2] = &boundaryCommand;
 
 	RaveCubeController raveCtrl(ledCtrl, &uart2, &settingsCtrl);
+
 	BeatDetector beatDetector(&settingsCtrl, &uart2, (uint32_t)SAMPLE_FREQ, (uint16_t)FFT_SAMPLE_COUNT);
 	beatDetector.EnableOutputToUart = false;
 	beatDetector.UseAbsValueOfCorrelation = true;
@@ -162,9 +172,16 @@ int main(void)
 		{
 			uint8_t* msgStr = uart2.GetRxMessage();
 			raveCtrl.ExecuteCommand(msgStr);
+
+			for(int i = 0; i < 3; i++)
+			{
+				if(raveCubeCommand[i]->Parse((char*)msgStr))
+				{
+					// Found a matching Commmand
+					uart2.Transmit((uint8_t*)"Command found!");
+				}
+			}
 		}
-
-
 	}
 }
 

@@ -10,9 +10,7 @@
 
 #include <arm_math.h>
 #include <stdio.h>
-#include <main.hpp>
 #include <VoltageSignal.hpp>
-
 
 struct FFT_Result
 {

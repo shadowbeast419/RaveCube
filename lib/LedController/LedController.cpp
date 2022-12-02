@@ -19,11 +19,11 @@ LedController::LedController()
 
 }
 
-void LedController::Init(SettingsController* settingsCtrl)
+void LedController::Init(MovingAvgFilter* movingAvgFilter, SettingsController* settingsCtrl)
 {
 	_settingsCtrl = settingsCtrl;
 	_peakTimer.Init();
-	_movAvgFilter.SetFilterOrder(settingsCtrl->settingsData.filterOrders, true);
+	_movAvgFilter->SetFilterOrder(settingsCtrl->settingsData.filterOrders);
 
 	this->InitLedMatrix();
 	this->InitPwm();
@@ -78,7 +78,7 @@ void LedController::PeakTimerPeriodElapsedHandler(TIM_HandleTypeDef *htim)
 	{
 		if(_peakRmsVoltage > 15.0f)
 		{
-			_movAvgFilter.AddPeakVoltageValue(_peakRmsVoltage);
+			_movAvgFilter->AddPeakVoltageValue(_peakRmsVoltage);
 		}
 
 		_peakRmsVoltage = 0.0f;
@@ -150,12 +150,12 @@ void LedController::CalculateBrightness(FFT_Result* fftResult, float32_t rmsVolt
 {
 	float32_t voltageRatio = 0.0f;
 
-	_movAvgFilter.AddVoltageValue(rmsVoltage);
+	_movAvgFilter->AddVoltageValue(rmsVoltage);
 
 	if(!startupIterationsComplete)
 		return;
 
-	_filteredRmsVoltage = _movAvgFilter.GetAverageVoltage();
+	_filteredRmsVoltage = _movAvgFilter->GetAverageVoltage();
 
 	if(_filteredRmsVoltage > _peakRmsVoltage)
 	{
@@ -165,7 +165,7 @@ void LedController::CalculateBrightness(FFT_Result* fftResult, float32_t rmsVolt
 //	_rmsVoltageSumOverInterval += _filteredRmsVoltage;
 //	_rmsVoltageSumCounter++;
 
-	_filteredPeakRmsVoltage = _movAvgFilter.GetAveragePeakVoltage();
+	_filteredPeakRmsVoltage = _movAvgFilter->GetAveragePeakVoltage();
 
 
 
@@ -184,7 +184,7 @@ void LedController::CalculateBrightness(FFT_Result* fftResult, float32_t rmsVolt
 
 	if(_filteredPeakRmsVoltage > 0.0f)
 	{
-		voltageRatio = (_filteredRmsVoltage / _filteredPeakRmsVoltage) * _brightnessMultiplicator;
+		voltageRatio = (_filteredRmsVoltage / _filteredPeakRmsVoltage) * _brightnessFactors.All;
 	}
 
 	HSVBrightness hsvParamsRed = CalculateHSVBrightness(fftResult, voltageRatio, Red);
@@ -202,16 +202,16 @@ void LedController::CalculateBrightness(FFT_Result* fftResult, float32_t rmsVolt
 	sumParams.Green = (rgbParamsRed.Green + rgbParamsGreen.Green + rgbParamsBlue.Green) / 3;
 	sumParams.Blue = (rgbParamsRed.Blue + rgbParamsGreen.Blue + rgbParamsBlue.Blue) / 3;
 
-	sumParams.Red = (uint16_t)(sumParams.Red * _settingsCtrl->settingsData.factors.Red);
-	sumParams.Green = (uint16_t)(sumParams.Green * _settingsCtrl->settingsData.factors.Green);
-	sumParams.Blue = (uint16_t)(sumParams.Blue * _settingsCtrl->settingsData.factors.Blue);
+	sumParams.Red = (uint16_t)(sumParams.Red * _brightnessFactors.Red);
+	sumParams.Green = (uint16_t)(sumParams.Green * _brightnessFactors.Green);
+	sumParams.Blue = (uint16_t)(sumParams.Blue * _brightnessFactors.Blue);
 
 	_currentUnfilteredBrightness = sumParams;
 
 	// sumParams = ApplyOvershoot(sumParams);
 
-	_movAvgFilter.AddBrightnessValue(sumParams);
-	sumParams = _movAvgFilter.GetAverageBrightness();
+	_movAvgFilter->AddBrightnessValue(sumParams);
+	sumParams = _movAvgFilter->GetAverageBrightness();
 
 	sumParams.Red = sumParams.Red < _maxBrightness ? sumParams.Red : _maxBrightness;
 	sumParams.Green = sumParams.Green < _maxBrightness ? sumParams.Green : _maxBrightness;
@@ -491,22 +491,22 @@ RgbLedBrightness LedController::CalculateRGBBrightness(FFT_Result* fftResult, fl
 	blueBrightness = CalculateBrightnessValueLinear(voltageRatio, _settingsCtrl->settingsData.factors.Blue, blueFrequencyPart / sumFrequencyAmplitudes);
 
 #endif
-	_movAvgFilter.AddBrightnessValue({redBrightness, greenBrightness, blueBrightness});
-	filteredBrightness = _movAvgFilter.GetAverageBrightness();
+	_movAvgFilter->AddBrightnessValue({redBrightness, greenBrightness, blueBrightness});
+	filteredBrightness = _movAvgFilter->GetAverageBrightness();
 
-	if(!_movAvgFilter.IsRingBufferFull(Red))
+	if(!_movAvgFilter->IsRingBufferFull(Red))
 	{
 		// Use previous brightness if MovAvgFilter is full
 		filteredBrightness.Red = _brightnessBeforeReset.Red;
 	}
 
-	if(!_movAvgFilter.IsRingBufferFull(Green))
+	if(!_movAvgFilter->IsRingBufferFull(Green))
 	{
 		// Use previous brightness if MovAvgFilter is full
 		filteredBrightness.Green = _brightnessBeforeReset.Green;
 	}
 
-	if(!_movAvgFilter.IsRingBufferFull(Blue))
+	if(!_movAvgFilter->IsRingBufferFull(Blue))
 	{
 		// Use previous brightness if MovAvgFilter is full
 		filteredBrightness.Blue = _brightnessBeforeReset.Blue;
@@ -621,15 +621,15 @@ uint8_t LedController::IsLedUpdateComplete()
 	return _ledMatrixFilled && !_dmaBufferNeedsUpdate;
 }
 
-void LedController::SetFilterOrder(FilterLevels filterOrders, bool clearRingBuffer)
+void LedController::SetFilterOrder(FilterLevels filterOrders)
 {
 	_brightnessBeforeReset = _currentBrightness;
-	_movAvgFilter.SetFilterOrder(filterOrders, clearRingBuffer);
+	_movAvgFilter->SetFilterOrder(filterOrders);
 }
 
 FilterLevels LedController::GetFilterOrder()
 {
-	return _movAvgFilter.GetFilterOrder();
+	return _movAvgFilter->GetFilterOrder();
 }
 
 void LedController::ResetLedMatrix()
@@ -658,19 +658,29 @@ float32_t LedController::GetPeakRMSVoltage()
 	return _filteredPeakRmsVoltage;
 }
 
-void LedController::SetBrightnessMultiplicator(float32_t brightnessMultiplicator)
+void LedController::SetBrightnessFactors(BrightnessFactors factors)
 {
-	_brightnessMultiplicator = brightnessMultiplicator;
+	_brightnessFactors = factors;
 }
 
-float32_t LedController::GetBrightnessMultiplicator()
+BrightnessFactors LedController::GetBrightnessFactors()
 {
-	return _brightnessMultiplicator;
+	return _brightnessFactors;
+}
+
+void LedController::SetColorBoundaries(FrequencyColorBoundaries boundaries)
+{
+	_colorBoundaries = boundaries;
+}
+
+FrequencyColorBoundaries LedController::GetColorBoundaries()
+{
+	return _colorBoundaries;
 }
 
 LedController::~LedController()
 {
-	// TODO Auto-generated destructor stub
+	
 }
 
 void LedController::ErrorHandler()

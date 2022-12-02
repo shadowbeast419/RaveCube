@@ -57,6 +57,9 @@ public:
 	void TxHandler();
 	void TxCompleteHandler(I2C_HandleTypeDef *hi2c);
 
+	void WriteDataEEPROM(uint8_t* data, uint16_t length, uint8_t section);
+	void ReadDataEEPROM(uint8_t* receiveBuffer, uint8_t length, uint8_t section);
+
 	void WriteDataEEPROM(SettingsFrame* data, uint8_t section);
 	void ReadDataEEPROM(SettingsFrame* data, uint8_t section);
 };

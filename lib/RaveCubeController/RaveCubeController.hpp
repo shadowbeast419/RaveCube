@@ -16,21 +16,6 @@
 
 #define CTRL_TX_BUFFER_LENGTH 256
 
-/* enum RaveCubeCommand
-{
-	ColorFilter = 0,
-	VoltageFilter = 1,
-	FrequencyBoundaries = 2,
-	BrigthnessFactors = 3,
-	LEDStatus = 4,
-	GammaStatus = 5,
-	StreamData = 6,
-	Settings = 7,
-};
-*/
-
-// static const char* _commandPalette[] = {"filterc", "filterv", "fboundaries", "bfactors", "led_status", "gamma_status", "sdata", "settings"};
-
 
 class RaveCubeController
 {

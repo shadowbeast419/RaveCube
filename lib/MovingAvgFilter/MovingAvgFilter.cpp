@@ -362,7 +362,7 @@ FilterLevels MovingAvgFilter::GetFilterOrder()
 	return _filterOrders;
 }
 
-void MovingAvgFilter::SetFilterOrder(FilterLevels orders, bool clearRingBuffer)
+void MovingAvgFilter::SetFilterOrder(FilterLevels orders)
 {
 	if(orders.RedBrightness != _filterOrders.RedBrightness)
 	{

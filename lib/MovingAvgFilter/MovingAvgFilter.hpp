@@ -97,7 +97,7 @@ public:
 	float32_t GetAverageVoltage();
 	float32_t GetAveragePeakVoltage();
 	FilterLevels GetFilterOrder();
-	void SetFilterOrder(FilterLevels orders, bool clearRingBuffer);
+	void SetFilterOrder(FilterLevels orders);
 	bool IsRingBufferFull(ColorSelection color);
 };
 

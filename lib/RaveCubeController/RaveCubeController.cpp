@@ -119,7 +119,7 @@ void RaveCubeController::UpdateFilterOrders(FilterLevels orders, bool saveToEEPR
 			(orders.PeakVoltage >= 3) && (orders.PeakVoltage <= PEAK_VOLTAGE_FILTER_ORDER_MAX))
 	{
 		_settingsCtrlInstance->settingsData.filterOrders = orders;
-		_ledCtrlInstance->SetFilterOrder(orders, false);
+		_ledCtrlInstance->SetFilterOrder(orders);
 
 		if(saveToEEPROM)
 			_settingsCtrlInstance->SaveSettings();

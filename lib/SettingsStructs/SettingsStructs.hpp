@@ -11,6 +11,7 @@
 #include "stm32g4xx_hal.h"
 #include <arm_math.h>
 #include <MovingAvgFilter.hpp>
+#include <SettingsStructs.hpp>
 
 struct FrequencyBoundary
 {
@@ -30,6 +31,7 @@ struct BrightnessFactors
 	float32_t Red;
 	float32_t Green;
 	float32_t Blue;
+	float32_t All;
 };
 
 struct SettingsFrame

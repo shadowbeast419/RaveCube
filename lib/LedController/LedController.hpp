@@ -13,6 +13,19 @@
 #define LINEAR
 #define USE_HSV
 
+#define BRIGHTNESS_FACTOR_RED_INIT ((float32_t) 3.25f)
+#define BRIGHTNESS_FACTOR_GREEN_INIT ((float32_t) 1.75f)
+#define BRIGHTNESS_FACTOR_BLUE_INIT ((float32_t) 1.25f)
+#define BRIGHTNESS_FACTOR_ALL_INIT ((float32_t) 1.5f)
+
+#define BOUNDARY_RED_MIN_INIT 0
+#define BOUNDARY_RED_MAX_INIT 200
+#define BOUNDARY_GREEN_MIN_INIT 200
+#define BOUNDARY_GREEN_MAX_INIT 1500
+#define BOUNDARY_BLUE_MIN_INIT 1500
+#define BOUNDARY_BLUE_MAX_INIT 7000
+
+
 #include "stm32g4xx_hal.h"
 #include <SettingsStructs.hpp>
 #include <RgbLedBrightness.hpp>
@@ -52,17 +65,21 @@ private:
 	uint32_t								_currentLedIndex = 0;
 	uint32_t								_currentPulseIndex = 0;
 	__IO uint8_t							_ledMatrixFilled = RESET;
-	MovingAvgFilter 						_movAvgFilter = MovingAvgFilter();
+	MovingAvgFilter* 						_movAvgFilter;
 	RgbLedBrightness						_currentBrightness = {0};
 	RgbLedBrightness						_currentUnfilteredBrightness = {0};
+	BrightnessFactors						_brightnessFactors = {BRIGHTNESS_FACTOR_RED_INIT, BRIGHTNESS_FACTOR_GREEN_INIT, 
+																	BRIGHTNESS_FACTOR_BLUE_INIT, BRIGHTNESS_FACTOR_ALL_INIT};
+	FrequencyColorBoundaries				_colorBoundaries = {{BOUNDARY_RED_MIN_INIT, BOUNDARY_RED_MAX_INIT}, 
+																{BOUNDARY_GREEN_MIN_INIT, BOUNDARY_GREEN_MAX_INIT}, 
+																{BOUNDARY_BLUE_MIN_INIT, BOUNDARY_BLUE_MAX_INIT}};
+
 	const uint16_t							_maxBrightness = 255;
 	float32_t								_filteredPeakRmsVoltage = 0.0f;
 	float32_t								_filteredRmsVoltage = 0.0f;
 	float32_t								_peakRmsVoltage = 0.0f;
 	uint8_t									_dmaBufferNeedsUpdate = SET;
 	LargeIntervalTimer						_peakTimer = LargeIntervalTimer(TIM4, 0.1f);
-
-	float32_t								_brightnessMultiplicator = 1.5f;
 
 	/// @brief For Priotizing strongest Color (not used)
 	uint16_t 								_prioThreshold = 50;
@@ -71,6 +88,7 @@ private:
 
 	RgbLedBrightness						_brightnessBeforeReset = {0};
 
+	LedController();
 	void InitLedMatrix();
 	void UpdatePwmSettingsBuffer(uint32_t ledIndexTmp, uint8_t ledIsOdd);
 	void ErrorHandler(void);
@@ -86,15 +104,12 @@ private:
 	RgbLedBrightness ApplyOvershoot(RgbLedBrightness source);
 	RgbLedBrightness PrioritizeStrongestColor(RgbLedBrightness brightness);
 
-	LedController();
-
 public:
-	virtual ~LedController();
+	void Init(MovingAvgFilter* movingAvgFilter, SettingsController* settingsCtrl);
 	static LedController* GetInstance();
 	void PulseFinishedHandler(TIM_HandleTypeDef *htim, uint8_t isFullyCpltFlag);
 	void PeakTimerInterruptHandler();
 	void PeakTimerPeriodElapsedHandler(TIM_HandleTypeDef *htim);
-	void Init(SettingsController* settingsCtrl);
 
 	uint8_t IsLedUpdateComplete();
 	void CalculateBrightness(FFT_Result* fftResult, float32_t peakVoltage, bool startupIterationsComplete);
@@ -104,16 +119,21 @@ public:
 	RgbLedBrightness GetCurrentBrightness();
 	RgbLedBrightness GetCurrentUnfilteredBrightness();
 
-	void SetFilterOrder(FilterLevels filterOrders, bool clearRingBuffer);
+	void SetFilterOrder(FilterLevels filterOrders);
 	FilterLevels GetFilterOrder();
 
 	float32_t GetRMSVoltage();
 	float32_t GetPeakRMSVoltage();
 
-	void SetBrightnessMultiplicator(float32_t brightnessMultiplicator);
-	float32_t GetBrightnessMultiplicator();
+	void SetBrightnessFactors(BrightnessFactors factors);
+	BrightnessFactors GetBrightnessFactors();
+
+	void SetColorBoundaries(FrequencyColorBoundaries boundaries);
+	FrequencyColorBoundaries GetColorBoundaries();
 
 	void ResetLedMatrix();
+
+	virtual ~LedController();
 };
 
 #endif /* INC_LEDCONTROLLER_H_ */

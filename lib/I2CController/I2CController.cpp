@@ -312,6 +312,38 @@ void I2CController::ReadDataEEPROM(SettingsFrame* data, uint8_t section)
 	address += sizeof(data->ledStatus);
 }
 
+/// @brief 
+/// @param data 
+/// @param length Size of data array in bytes 
+/// @param section 
+void I2CController::WriteDataEEPROM(uint8_t* data, uint16_t length, uint8_t section)
+{
+	uint8_t* dataBuffer = _aTxBuffer;
+	memcpy(data, dataBuffer, length);
+
+	// ToDo:
+	// Round of datasize necessary?
+	TransmitData(section * EEPROM_SECTIONSIZE, length);
+
+	// Clear transmit buffer
+	memset(_aTxBuffer, 0, length);
+}
+
+/// @brief 
+/// @param length Bytes to read from EEPROM 
+/// @param section 
+/// @return 
+void I2CController::ReadDataEEPROM(uint8_t* receiveBuffer, uint8_t length, uint8_t section)
+{
+	uint8_t* dataBuffer = _aRxBuffer;
+
+	ReceiveData(section * EEPROM_SECTIONSIZE, length);
+	HAL_Delay(EEPROM_WRITE * 2);
+
+	memcpy(dataBuffer, receiveBuffer, length);
+}
+
+
 void I2CController::TransmitData(uint16_t address, uint16_t size)
 {
 	uint16_t counter = 0;
