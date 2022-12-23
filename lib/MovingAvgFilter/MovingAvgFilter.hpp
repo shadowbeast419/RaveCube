@@ -9,19 +9,7 @@
 #define INC_MOVINGAVGFILTER_H_
 
 #include <RgbLedBrightness.hpp>
-
-#define COLOR_FILTER_ORDER_MAX 150
-#define COLOR_FILTER_ORDER_MIN 3
-
-#define COLOR_FILTER_RED_ORDER_INIT 10
-#define COLOR_FILTER_GREEN_ORDER_INIT 10
-#define COLOR_FILTER_BLUE_ORDER_INIT 10
-
-#define VOLTAGE_FILTER_ORDER_MAX 100
-#define VOLTAGE_FILTER_ORDER_INIT 50
-
-#define PEAK_VOLTAGE_FILTER_ORDER_MAX 125
-#define PEAK_VOLTAGE_FILTER_ORDER_INIT PEAK_VOLTAGE_FILTER_ORDER_MAX
+#include <FilterLevels.hpp>
 
 struct RingBufferNodeColorAmplitude
 {
@@ -37,15 +25,6 @@ struct RingBufferNodeVoltage
 	float32_t voltage;
 };
 
-struct FilterLevels
-{
-	uint16_t RedBrightness;
-	uint16_t GreenBrightness;
-	uint16_t BlueBrightness;
-	uint16_t Voltage;
-	uint16_t PeakVoltage;
-};
-
 enum VoltageFilterSelection
 {
 	PeakVoltage,
@@ -55,24 +34,21 @@ enum VoltageFilterSelection
 class MovingAvgFilter
 {
 private:
-	FilterLevels						_filterOrders = {0};
+	FilterLevels						_filterOrders;
 
-	RingBufferNodeColorAmplitude		_ringBufferRedBrightness[COLOR_FILTER_ORDER_MAX];
+	RingBufferNodeColorAmplitude		_ringBufferRedBrightness[FilterLevelsColor::FilterLevelsMax];
 	RingBufferNodeColorAmplitude*		_currentNodeRedBrightness = NULL; // Current node of the color amplitudes in the ring buffer
-	uint16_t							_elementCounterRed = 0;
 
-	RingBufferNodeColorAmplitude		_ringBufferGreenBrightness[COLOR_FILTER_ORDER_MAX];
+	RingBufferNodeColorAmplitude		_ringBufferGreenBrightness[FilterLevelsColor::FilterLevelsMax];
 	RingBufferNodeColorAmplitude*		_currentNodeGreenBrightness = NULL;
-	uint16_t							_elementCounterGreen = 0;
 
-	RingBufferNodeColorAmplitude		_ringBufferBlueBrightness[COLOR_FILTER_ORDER_MAX];
+	RingBufferNodeColorAmplitude		_ringBufferBlueBrightness[FilterLevelsColor::FilterLevelsMax];
 	RingBufferNodeColorAmplitude*		_currentNodeBlueBrightness = NULL;
-	uint16_t							_elementCounterBlue = 0;
 
-	RingBufferNodeVoltage				_ringBufferVoltage[VOLTAGE_FILTER_ORDER_MAX];
+	RingBufferNodeVoltage				_ringBufferVoltage[FilterLevelsVoltage::FilterLevelsMax];
 	RingBufferNodeVoltage*				_currentNodeVoltage = NULL;
 
-	RingBufferNodeVoltage				_ringBufferPeakVoltage[PEAK_VOLTAGE_FILTER_ORDER_MAX];
+	RingBufferNodeVoltage				_ringBufferPeakVoltage[FilterLevelsVoltage::FilterLevelsMax];
 	RingBufferNodeVoltage*				_currentNodePeakVoltage = NULL;
 
 	void InitColorRingBuffer(RingBufferNodeColorAmplitude* ringBuffer, uint16_t order, RingBufferNodeColorAmplitude** _currentNode, 
@@ -93,12 +69,14 @@ public:
 	void AddBrightnessValue(RgbLedBrightness amplitudes);
 	void AddVoltageValue(float32_t voltage);
 	void AddPeakVoltageValue(float32_t voltage);
+
 	RgbLedBrightness GetAverageBrightness();
 	float32_t GetAverageVoltage();
 	float32_t GetAveragePeakVoltage();
+
 	FilterLevels GetFilterOrder();
 	void SetFilterOrder(FilterLevels orders);
-	bool IsRingBufferFull(ColorSelection color);
+	void SetColorFilterOrder(FilterLevelsColor orders);
 };
 
 #endif /* INC_MOVINGAVGFILTER_H_ */

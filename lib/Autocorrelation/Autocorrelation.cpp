@@ -6,9 +6,8 @@ Autocorrelation::Autocorrelation()
 
 }
 
-void Autocorrelation::Init(SettingsController* settingsCtrl)
+void Autocorrelation::Init()
 {
-    _settingsCtrl = settingsCtrl;
     InitRingBuffer(_sequenceIntervals);
 }
 

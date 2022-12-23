@@ -92,6 +92,8 @@ void Error_Handler(void);
 #define ENABLE_WINDOWING
 #define ENABLE_STARTUP_SEQUENCE
 
+#define COMMAND_COUNT 3
+
 // #define DISABLE_IRQS_TEMP
 /* USER CODE END Private defines */
 

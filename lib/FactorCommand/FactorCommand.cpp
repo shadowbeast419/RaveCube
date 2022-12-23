@@ -4,28 +4,11 @@
 
 #include <FactorCommand.hpp>
 
-bool FactorCommand::IsDataValid(BrightnessFactors brightnessFactors)
+FactorCommand::FactorCommand(UartController* uartCtrl, I2CController* i2cCtrl, LedController* ledController) : RaveCubeCommand(uartCtrl, i2cCtrl)
 {
-    float32_t factorMin = 0.01f;
-    float32_t factorMax = 100.0f;
-
-    if(brightnessFactors.Red >= factorMin && brightnessFactors.Green >= factorMin && 
-        brightnessFactors.Blue >= factorMin && brightnessFactors.All >= factorMin && 
-        brightnessFactors.Red <= factorMax && brightnessFactors.Green <= factorMax &&
-        brightnessFactors.Blue <= factorMax && brightnessFactors.All <= factorMax)
-    {
-        return true;
-    }
-
-    return false;
+    _ledController = ledController;
 }
 
-void FactorCommand::SetDefaultValues()
-{
-    _brightnessFactors.Red = BRIGHTNESS_FACTOR_RED_INIT;
-    _brightnessFactors.Green = BRIGHTNESS_FACTOR_GREEN_INIT;
-    _brightnessFactors.Blue = BRIGHTNESS_FACTOR_BLUE_INIT;
-}
 
 CommandStatus FactorCommand::Parse(char* str)
 {
@@ -34,7 +17,7 @@ CommandStatus FactorCommand::Parse(char* str)
         return WrongCommandString;
 
 	char* pSplittedStr = strtok((char*)str, " ");
-	BrightnessFactors factors = {0.0f , 0.0f , 0.0f};
+	BrightnessFactors factors = BrightnessFactors();
 
     uint8_t i;
 
@@ -60,59 +43,31 @@ CommandStatus FactorCommand::Parse(char* str)
 		pSplittedStr = strtok(NULL, " ");
 	}
 
-    if(i != _numberOfParams)
-    {
+    if(i == 1)
+        return Read;
+
+    if(i != _numberOfParams + 1)
         return WrongParamCount;
-    }
 
     // Check if values are valid
-    if(IsDataValid(factors))
+    if(factors.IsDataValid())
 	{
         _brightnessFactors = factors;
-        _dataValid = true;
+        return Valid;
 	}
 
-    _dataValid = false;
     return WrongParamValue;
-}
-
-uint8_t* FactorCommand::ToBinary(uint16_t* dataLength)
-{ 
-    *dataLength = sizeof(BrightnessFactors);
-    memcpy(_binaryData, &_brightnessFactors, *dataLength);
-
-    return _binaryData;
-}
-
-void FactorCommand::ToStruct(uint8_t* dataArray)
-{
-    uint16_t dataLength = sizeof(FilterLevels);
-	BrightnessFactors factors = {0};
-
-	memcpy(&factors, dataArray, dataLength);
-
-	// Error, fallback to default values
-	if(!IsDataValid(factors))
-	{
-		SetDefaultValues();
-		return;
-	}
-
-	_brightnessFactors = factors;
 }
 
 void FactorCommand::Save()
 {
-    uint16_t dataLength = 0;
-    uint8_t* dataArray;
+    uint32_t dataLength = 0;
 
-    if(_dataValid)
-    {
-        _ledController->SetBrightnessFactors(_brightnessFactors);
-        dataArray = ToBinary(&dataLength);
+    _ledController->SetBrightnessFactors(_brightnessFactors);
 
-        _i2cCtrl->WriteDataEEPROM(dataArray, dataLength, _eepromSection);
-    }
+    dataLength = DataToBinary<BrightnessFactors>(_brightnessFactors, _binaryData);
+    _i2cCtrl->WriteDataEEPROM(_binaryData, dataLength, _eepromSection);
+
 }
 
 void FactorCommand::Load()
@@ -120,7 +75,48 @@ void FactorCommand::Load()
 	uint16_t dataLength = sizeof(BrightnessFactors);
 
 	_i2cCtrl->ReadDataEEPROM(_binaryData, dataLength, _eepromSection);
-	ToStruct(_binaryData);
+	_brightnessFactors = BinaryToData<BrightnessFactors>(_binaryData);
+
+    _ledController->SetBrightnessFactors(_brightnessFactors);
+}
+
+
+void FactorCommand::SendCommandResponse(CommandStatus errorStatus)
+{
+    switch(errorStatus)
+    {
+        case Valid:
+			sprintf(_messageBuffer, "Valid Factor Command \n");
+            break;
+
+        // case WrongCommandString:
+		// 	sprintf(messageBuffer, "Valid Filter Command");
+        //     _uartCtrl->Transmit((uint8_t*)"Wrong Command String");
+        //     break;
+
+        case WrongParamCount:
+            sprintf(_messageBuffer, "Wrong Parameter Count, Expected %i \n", _numberOfParams);
+            break;
+
+        case WrongParamValue:
+			sprintf(_messageBuffer, "Wrong Parameter Value \n");
+            break;
+
+        case Read:
+			Print();
+			return;
+
+        case WrongCommandString:
+            return;
+    }
+
+	_uartCtrl->Transmit((uint8_t*)_messageBuffer);
+}
+
+char* FactorCommand::ToString()
+{
+    _brightnessFactors.ToString(_toStringBuffer);
+    return _toStringBuffer;
 }
 
 FactorCommand::~FactorCommand()

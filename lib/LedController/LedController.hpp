@@ -13,28 +13,16 @@
 #define LINEAR
 #define USE_HSV
 
-#define BRIGHTNESS_FACTOR_RED_INIT ((float32_t) 3.25f)
-#define BRIGHTNESS_FACTOR_GREEN_INIT ((float32_t) 1.75f)
-#define BRIGHTNESS_FACTOR_BLUE_INIT ((float32_t) 1.25f)
-#define BRIGHTNESS_FACTOR_ALL_INIT ((float32_t) 1.5f)
-
-#define BOUNDARY_RED_MIN_INIT 0
-#define BOUNDARY_RED_MAX_INIT 200
-#define BOUNDARY_GREEN_MIN_INIT 200
-#define BOUNDARY_GREEN_MAX_INIT 1500
-#define BOUNDARY_BLUE_MIN_INIT 1500
-#define BOUNDARY_BLUE_MAX_INIT 7000
-
-
 #include "stm32g4xx_hal.h"
-#include <SettingsStructs.hpp>
 #include <RgbLedBrightness.hpp>
 #include <LargeIntervalTimer.hpp>
 #include <PwmGenerator.hpp>
 #include <MovingAvgFilter.hpp>
 #include <SettingsController.hpp>
 #include <FFT.hpp>
-
+#include <FilterLevels.hpp>
+#include <FrequencyColorBoundaries.hpp>
+#include <BrightnessFactors.hpp>
 
 const uint8_t gamma8[256] = {
 	    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -61,18 +49,14 @@ class LedController : public PwmGenerator
 
 private:
 	static LedController					_rgbInstance;
-	SettingsController*						_settingsCtrl = NULL;
 	uint32_t								_currentLedIndex = 0;
 	uint32_t								_currentPulseIndex = 0;
 	__IO uint8_t							_ledMatrixFilled = RESET;
 	MovingAvgFilter* 						_movAvgFilter;
 	RgbLedBrightness						_currentBrightness = {0};
 	RgbLedBrightness						_currentUnfilteredBrightness = {0};
-	BrightnessFactors						_brightnessFactors = {BRIGHTNESS_FACTOR_RED_INIT, BRIGHTNESS_FACTOR_GREEN_INIT, 
-																	BRIGHTNESS_FACTOR_BLUE_INIT, BRIGHTNESS_FACTOR_ALL_INIT};
-	FrequencyColorBoundaries				_colorBoundaries = {{BOUNDARY_RED_MIN_INIT, BOUNDARY_RED_MAX_INIT}, 
-																{BOUNDARY_GREEN_MIN_INIT, BOUNDARY_GREEN_MAX_INIT}, 
-																{BOUNDARY_BLUE_MIN_INIT, BOUNDARY_BLUE_MAX_INIT}};
+	BrightnessFactors						_brightnessFactors = BrightnessFactors();
+	FrequencyColorBoundaries				_colorBoundaries;
 
 	const uint16_t							_maxBrightness = 255;
 	float32_t								_filteredPeakRmsVoltage = 0.0f;
@@ -85,8 +69,6 @@ private:
 	uint16_t 								_prioThreshold = 50;
 	/// @brief For Priotizing strongest Color (not used)
 	float32_t 								_prioAttenuation = 0.3f;
-
-	RgbLedBrightness						_brightnessBeforeReset = {0};
 
 	LedController();
 	void InitLedMatrix();
@@ -105,7 +87,7 @@ private:
 	RgbLedBrightness PrioritizeStrongestColor(RgbLedBrightness brightness);
 
 public:
-	void Init(MovingAvgFilter* movingAvgFilter, SettingsController* settingsCtrl);
+	void Init(MovingAvgFilter* movingAvgFilter);
 	static LedController* GetInstance();
 	void PulseFinishedHandler(TIM_HandleTypeDef *htim, uint8_t isFullyCpltFlag);
 	void PeakTimerInterruptHandler();
@@ -121,6 +103,7 @@ public:
 
 	void SetFilterOrder(FilterLevels filterOrders);
 	FilterLevels GetFilterOrder();
+	void SetColorFilterOrder(FilterLevelsColor filterOrdersColor);
 
 	float32_t GetRMSVoltage();
 	float32_t GetPeakRMSVoltage();

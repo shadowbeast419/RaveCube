@@ -42,7 +42,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include <main.hpp>
-#include <SettingsStructs.hpp>
 #include <FFT.hpp>
 #include <Adc1.hpp>
 #include <VoltageSignal.hpp>
@@ -100,9 +99,9 @@ int main(void)
 	adc1->Init();
 	uart2.Init();
 
-	SettingsController settingsCtrl(i2c);
+	// SettingsController settingsCtrl(i2c);
 
-	ledCtrl->Init(&movingAvgFilter, &settingsCtrl);
+	ledCtrl->Init(&movingAvgFilter);
 
 	RaveCubeCommand* raveCubeCommand[3];
 	FilterCommand filterCommand(&uart2, i2c, &movingAvgFilter);
@@ -113,14 +112,17 @@ int main(void)
 	raveCubeCommand[1] = &factorCommmand;
 	raveCubeCommand[2] = &boundaryCommand;
 
-	RaveCubeController raveCtrl(ledCtrl, &uart2, &settingsCtrl);
+	for(uint8_t i = 0; i < COMMAND_COUNT; i++)
+	{
+		raveCubeCommand[i]->Load();
+	}
 
-	BeatDetector beatDetector(&settingsCtrl, &uart2, (uint32_t)SAMPLE_FREQ, (uint16_t)FFT_SAMPLE_COUNT);
+	BeatDetector beatDetector(&uart2, (uint32_t)SAMPLE_FREQ, (uint16_t)FFT_SAMPLE_COUNT);
 	beatDetector.EnableOutputToUart = false;
 	beatDetector.UseAbsValueOfCorrelation = true;
 
 	CorrelationResult corrResult = {0};
-	FilterLevels updatedFilterLevels = {0};
+	FilterLevelsColor calculatedFilterLevels = {0};
 	bool calcSuccessful = false;
 
 	#ifdef ENABLE_STARTUP_SEQUENCE
@@ -148,7 +150,7 @@ int main(void)
 			iterationCounter++;
 
 			// At this point the Filters have a valid result
-			if(iterationCounter > VOLTAGE_FILTER_ORDER_MAX * 2)
+			if(iterationCounter > FilterLevelsVoltage::FilterLevelsMax * 2)
 				startupIterationsComplete = true;
 
 			#endif
@@ -158,28 +160,35 @@ int main(void)
 			#endif
 
 			corrResult = beatDetector.CalculateBeatsPerMinute(ledCtrl->GetCurrentUnfilteredBrightness());
-			calcSuccessful = beatDetector.CalculateFilterLevels(corrResult, &updatedFilterLevels);
+			calcSuccessful = beatDetector.CalculateFilterLevels(corrResult, &calculatedFilterLevels);
 
 			if(calcSuccessful)
 			{
-				raveCtrl.ChangeFilterOrder(updatedFilterLevels, false);
+				// raveCtrl.ChangeFilterOrder(updatedFilterLevels, false);
+				ledCtrl->SetColorFilterOrder(calculatedFilterLevels);
 			}
 
-			raveCtrl.SendStreamingData();
+			// raveCtrl.SendStreamingData();
 		}
 
 		if(uart2.IsNewRxDataAvailable() == SET)
 		{
 			uint8_t* msgStr = uart2.GetRxMessage();
-			raveCtrl.ExecuteCommand(msgStr);
+			// raveCtrl.ExecuteCommand(msgStr);
 
-			for(int i = 0; i < 3; i++)
+			for(int i = 0; i < COMMAND_COUNT; i++)
 			{
-				if(raveCubeCommand[i]->Parse((char*)msgStr))
+				CommandStatus cmdStatus = raveCubeCommand[i]->Parse((char*)msgStr);
+
+				// Look for the next command if invalid
+				if(cmdStatus != Valid)
 				{
-					// Found a matching Commmand
-					uart2.Transmit((uint8_t*)"Command found!");
+					raveCubeCommand[i]->SendCommandResponse(cmdStatus);
+					continue;
 				}
+
+				// Valid command recognized
+				raveCubeCommand[i]->Save();
 			}
 		}
 	}

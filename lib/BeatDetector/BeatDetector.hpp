@@ -32,16 +32,17 @@ struct RingBufferNodeBPM
 class BeatDetector
 {
     public:
-        BeatDetector(SettingsController* settingsCtrl, UartController* uartCtrl, 
+        BeatDetector(UartController* uartCtrl, 
             uint32_t sampleFrequency, uint16_t sampleCount);
         ~BeatDetector();
 
         CorrelationResult CalculateBeatsPerMinute(RgbLedBrightness rgbBrightness);
         void GetBpmBoundaries(uint16_t* minValue, uint16_t* maxValue);
-        bool CalculateFilterLevels(CorrelationResult result, FilterLevels* filterLevels);
+        bool CalculateFilterLevels(CorrelationResult result, FilterLevelsColor* filterLevels);
 
         bool                            EnableOutputToUart = true;
         bool                            UseAbsValueOfCorrelation = false;
+
     private:
         void InitRingBuffer();
         CorrelationResult AddElementToFilter(CorrelationResult bpm);
@@ -50,7 +51,6 @@ class BeatDetector
         void WriteResultToUart(ColorSelection color, CorrelationResult result);
 
         Autocorrelation                 _correlation = Autocorrelation();
-        SettingsController*             _settingsCtrl = NULL;
         UartController*                 _uartCtrl = NULL;
         uint32_t                        _sampleFrequency = 0;
         uint16_t                        _sampleCount = 0;

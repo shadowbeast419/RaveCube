@@ -19,11 +19,10 @@ LedController::LedController()
 
 }
 
-void LedController::Init(MovingAvgFilter* movingAvgFilter, SettingsController* settingsCtrl)
+void LedController::Init(MovingAvgFilter* movingAvgFilter)
 {
-	_settingsCtrl = settingsCtrl;
 	_peakTimer.Init();
-	_movAvgFilter->SetFilterOrder(settingsCtrl->settingsData.filterOrders);
+	_movAvgFilter = movingAvgFilter;
 
 	this->InitLedMatrix();
 	this->InitPwm();
@@ -221,27 +220,21 @@ void LedController::CalculateBrightness(FFT_Result* fftResult, float32_t rmsVolt
 
 #endif
 
-	if(_settingsCtrl->settingsData.gammaStatus == SET)
-	{
-		_currentBrightness.Red = gamma8[_currentBrightness.Red];
-		_currentBrightness.Green = gamma8[_currentBrightness.Green];
-		_currentBrightness.Blue = gamma8[_currentBrightness.Blue];
-	}
+	_currentBrightness.Red = gamma8[_currentBrightness.Red];
+	_currentBrightness.Green = gamma8[_currentBrightness.Green];
+	_currentBrightness.Blue = gamma8[_currentBrightness.Blue];
 }
 
 void LedController::UpdateLEDColor()
 {
 	uint32_t max_i = _ledCount + _resetOffset;
 
-	if(_settingsCtrl->settingsData.ledStatus == SET)
+	for(uint32_t i = _resetOffset; i < max_i; i++)
 	{
-		for(uint32_t i = _resetOffset; i < max_i; i++)
-		{
-			_led_matrix[i].Red = _currentBrightness.Red;
-			_led_matrix[i].Green = _currentBrightness.Green;
-			_led_matrix[i].Blue = _currentBrightness.Blue;
-			_led_matrix[i].Reset = 0;
-		}
+		_led_matrix[i].Red = _currentBrightness.Red;
+		_led_matrix[i].Green = _currentBrightness.Green;
+		_led_matrix[i].Blue = _currentBrightness.Blue;
+		_led_matrix[i].Reset = 0;
 	}
 
 	_ledMatrixFilled = SET;
@@ -274,22 +267,22 @@ HSVBrightness LedController::CalculateHSVBrightness(FFT_Result* fftResult, float
 	switch(selection)
 	{
 	case Red:
-		strongestFreq = GetMaxFrequencyFromRange(fftResult, _settingsCtrl->settingsData.boundaries.Red.Min,
-				_settingsCtrl->settingsData.boundaries.Red.Max);
+		strongestFreq = GetMaxFrequencyFromRange(fftResult, _colorBoundaries.Red.Min,
+				_colorBoundaries.Red.Max);
 
 		hsvParams = GetHSVParametersFromColor(redFrequencyPart / sumFrequencyAmplitudes, strongestFreq, voltageRatio, selection);
 
 		break;
 	case Green:
-		strongestFreq = GetMaxFrequencyFromRange(fftResult, _settingsCtrl->settingsData.boundaries.Green.Min,
-				_settingsCtrl->settingsData.boundaries.Green.Max);
+		strongestFreq = GetMaxFrequencyFromRange(fftResult, _colorBoundaries.Green.Min,
+				_colorBoundaries.Green.Max);
 
 		hsvParams = GetHSVParametersFromColor(greenFrequencyPart / sumFrequencyAmplitudes, strongestFreq, voltageRatio, selection);
 
 		break;
 	case Blue:
-		strongestFreq = GetMaxFrequencyFromRange(fftResult, _settingsCtrl->settingsData.boundaries.Blue.Min,
-				_settingsCtrl->settingsData.boundaries.Blue.Max);
+		strongestFreq = GetMaxFrequencyFromRange(fftResult, _colorBoundaries.Blue.Min,
+				_colorBoundaries.Blue.Max);
 
 		hsvParams = GetHSVParametersFromColor(blueFrequencyPart / sumFrequencyAmplitudes, strongestFreq, voltageRatio, selection);
 
@@ -330,22 +323,22 @@ HSVBrightness LedController::GetHSVParametersFromColor(float32_t freqEnergyRatio
 	switch(color)
 	{
 	case Red:
-		k = (15.0f - 0.0f) / (((float32_t)_settingsCtrl->settingsData.boundaries.Red.Max) - ((float32_t)_settingsCtrl->settingsData.boundaries.Red.Min));
+		k = (15.0f - 0.0f) / (((float32_t)_colorBoundaries.Red.Max) - ((float32_t)_colorBoundaries.Red.Min));
 
-		d = 15.0f - ((float32_t)_settingsCtrl->settingsData.boundaries.Red.Max) * k;
+		d = 15.0f - ((float32_t)_colorBoundaries.Red.Max) * k;
 
 
 		break;
 	case Green:
-		k = (135.0f - 105.0f) / (((float32_t)_settingsCtrl->settingsData.boundaries.Green.Max) - ((float32_t)_settingsCtrl->settingsData.boundaries.Green.Min));
+		k = (135.0f - 105.0f) / (((float32_t)_colorBoundaries.Green.Max) - ((float32_t)_colorBoundaries.Green.Min));
 
-		d = 135.0f - ((float32_t)_settingsCtrl->settingsData.boundaries.Green.Max) * k;
+		d = 135.0f - ((float32_t)_colorBoundaries.Green.Max) * k;
 
 		break;
 	case Blue:
-		k = (240.0f - 210.0f) / (((float32_t)_settingsCtrl->settingsData.boundaries.Blue.Max) - ((float32_t)_settingsCtrl->settingsData.boundaries.Blue.Min));
+		k = (240.0f - 210.0f) / (((float32_t)_colorBoundaries.Blue.Max) - ((float32_t)_colorBoundaries.Blue.Min));
 
-		d = 240.0f - ((float32_t)_settingsCtrl->settingsData.boundaries.Blue.Max) * k;
+		d = 240.0f - ((float32_t)_colorBoundaries.Blue.Max) * k;
 
 		break;
 	}
@@ -425,20 +418,20 @@ void LedController::CalculateFrequencyEnergy(FFT_Result* fftResult, float32_t* r
 {
 	for(uint16_t i = 0; i < MAX_FFT_RESULT_INDEX; i++)
 	{
-		if((fftResult[i].frequency >= _settingsCtrl->settingsData.boundaries.Red.Min) &&
-				(fftResult[i].frequency < _settingsCtrl->settingsData.boundaries.Red.Max))
+		if((fftResult[i].frequency >= _colorBoundaries.Red.Min) &&
+				(fftResult[i].frequency < _colorBoundaries.Red.Max))
 		{
 			*red += fftResult[i].absoluteValue;
 		}
 
-		if((fftResult[i].frequency >= _settingsCtrl->settingsData.boundaries.Green.Min ) &&
-				(fftResult[i].frequency < _settingsCtrl->settingsData.boundaries.Green.Max))
+		if((fftResult[i].frequency >= _colorBoundaries.Green.Min ) &&
+				(fftResult[i].frequency < _colorBoundaries.Green.Max))
 		{
 			*green += fftResult[i].absoluteValue;
 		}
 
-		if((fftResult[i].frequency >= _settingsCtrl->settingsData.boundaries.Blue.Min ) &&
-				(fftResult[i].frequency < _settingsCtrl->settingsData.boundaries.Blue.Max))
+		if((fftResult[i].frequency >= _colorBoundaries.Blue.Min ) &&
+				(fftResult[i].frequency < _colorBoundaries.Blue.Max))
 		{
 			*blue += fftResult[i].absoluteValue;
 		}
@@ -486,31 +479,13 @@ RgbLedBrightness LedController::CalculateRGBBrightness(FFT_Result* fftResult, fl
 	uint16_t greenBrightness = 0;
 	uint16_t blueBrightness = 0;
 
-	redBrightness = CalculateBrightnessValueLinear(voltageRatio, _settingsCtrl->settingsData.factors.Red, redFrequencyPart / sumFrequencyAmplitudes);
-	greenBrightness = CalculateBrightnessValueLinear(voltageRatio, _settingsCtrl->settingsData.factors.Green, greenFrequencyPart / sumFrequencyAmplitudes);
-	blueBrightness = CalculateBrightnessValueLinear(voltageRatio, _settingsCtrl->settingsData.factors.Blue, blueFrequencyPart / sumFrequencyAmplitudes);
+	redBrightness = CalculateBrightnessValueLinear(voltageRatio, _brightnessFactors.Red, redFrequencyPart / sumFrequencyAmplitudes);
+	greenBrightness = CalculateBrightnessValueLinear(voltageRatio, _brightnessFactors.Green, greenFrequencyPart / sumFrequencyAmplitudes);
+	blueBrightness = CalculateBrightnessValueLinear(voltageRatio, _brightnessFactors.Blue, blueFrequencyPart / sumFrequencyAmplitudes);
 
 #endif
 	_movAvgFilter->AddBrightnessValue({redBrightness, greenBrightness, blueBrightness});
 	filteredBrightness = _movAvgFilter->GetAverageBrightness();
-
-	if(!_movAvgFilter->IsRingBufferFull(Red))
-	{
-		// Use previous brightness if MovAvgFilter is full
-		filteredBrightness.Red = _brightnessBeforeReset.Red;
-	}
-
-	if(!_movAvgFilter->IsRingBufferFull(Green))
-	{
-		// Use previous brightness if MovAvgFilter is full
-		filteredBrightness.Green = _brightnessBeforeReset.Green;
-	}
-
-	if(!_movAvgFilter->IsRingBufferFull(Blue))
-	{
-		// Use previous brightness if MovAvgFilter is full
-		filteredBrightness.Blue = _brightnessBeforeReset.Blue;
-	}
 
 	RgbLedBrightness brightness = ApplyOvershoot(filteredBrightness);
 
@@ -623,8 +598,12 @@ uint8_t LedController::IsLedUpdateComplete()
 
 void LedController::SetFilterOrder(FilterLevels filterOrders)
 {
-	_brightnessBeforeReset = _currentBrightness;
 	_movAvgFilter->SetFilterOrder(filterOrders);
+}
+
+void LedController::SetColorFilterOrder(FilterLevelsColor filterOrdersColor)
+{
+	_movAvgFilter->SetColorFilterOrder(filterOrdersColor);
 }
 
 FilterLevels LedController::GetFilterOrder()

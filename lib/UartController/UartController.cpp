@@ -26,12 +26,11 @@ void UartController::Transmit(uint8_t* data)
 
 	memcpy((uint8_t*)_txBuffer, (uint8_t*)data, dataLength);
 
-//	do
-//	{
-//		uartStatus = HAL_UART_GetState(&huart2);
-//
-//	} while (uartStatus != HAL_UART_STATE_READY);
+	// do
+	// {
+	// 	status = HAL_UART_GetState(&huart2);
 
+	// } while (status != HAL_UART_STATE_READY);
 
 	while(_transmitComplete == RESET);
 

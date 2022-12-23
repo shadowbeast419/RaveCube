@@ -6,22 +6,10 @@
 //     _i2cCtrl = i2cController;
 // }
 
-void RaveCubeCommand::SendCommandResponse(CommandStatus errorStatus)
+void RaveCubeCommand::Print()
 {
-    switch(errorStatus)
-    {
-        case Valid:
-            break;
-
-        case WrongCommandString:
-            break;
-
-        case WrongParamCount:
-            break;
-
-        case WrongParamValue:
-            break;
-    }
+	// ToString is overloaded by the command classes
+	_uartCtrl->Transmit((uint8_t*) ToString());
 }
 
 // https://jameshfisher.com/2018/03/30/round-up-power-2/

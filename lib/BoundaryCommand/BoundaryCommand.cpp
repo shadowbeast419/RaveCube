@@ -1,26 +1,9 @@
 
 #include <BoundaryCommand.hpp>
 
-bool BoundaryCommand::IsDataValid(FrequencyColorBoundaries colorBoundaries)
+BoundaryCommand::BoundaryCommand(UartController* uartCtrl, I2CController* i2cCtrl, LedController* ledController) : RaveCubeCommand(uartCtrl, i2cCtrl)
 {
-	// Check if values are valid
-    if((colorBoundaries.Red.Min < colorBoundaries.Red.Max) && (colorBoundaries.Green.Min < colorBoundaries.Green.Max) 
-            && (colorBoundaries.Blue.Min < colorBoundaries.Blue.Max))
-	{
-		return true;
-	}
-
-	return false;
-}
-
-void BoundaryCommand::SetDefaultValues()
-{
-	_colorBoundaries.Red.Min = BOUNDARY_RED_MIN_INIT;
-    _colorBoundaries.Red.Max = BOUNDARY_RED_MAX_INIT;
-    _colorBoundaries.Green.Min = BOUNDARY_GREEN_MIN_INIT;
-    _colorBoundaries.Green.Max = BOUNDARY_GREEN_MAX_INIT;
-    _colorBoundaries.Blue.Min = BOUNDARY_BLUE_MIN_INIT;
-    _colorBoundaries.Blue.Max = BOUNDARY_BLUE_MAX_INIT;
+	_ledController = ledController;
 }
 
 CommandStatus BoundaryCommand::Parse(char* str)
@@ -67,61 +50,29 @@ CommandStatus BoundaryCommand::Parse(char* str)
 		pSplittedStr = strtok(NULL, " ");
 	}
 
-    if(i != _numberOfParams)
-    {
+	if(i == 1)
+		return Read;
+
+    if(i != _numberOfParams + 1)
         return WrongParamCount;
-    }
 
     // Check if values are valid
-    if(IsDataValid(colorBoundaries))
+    if(colorBoundaries.IsDataValid())
 	{
         _colorBoundaries = colorBoundaries;
-        _dataValid = true;
 	}
-
-    _dataValid = false;
 
     return WrongParamValue;
 }
 
-uint8_t* BoundaryCommand::ToBinary(uint16_t* dataLength)
-{ 
-    *dataLength = sizeof(FrequencyColorBoundaries);
-    memcpy(_binaryData, &_colorBoundaries, *dataLength);
-
-    return _binaryData;
-}
-
-void BoundaryCommand::ToStruct(uint8_t* dataArray)
-{
-    uint16_t dataLength = sizeof(FrequencyColorBoundaries);
-	FrequencyColorBoundaries boundaries = {0};
-
-	memcpy(&boundaries, dataArray, dataLength);
-
-	// Error, fallback to default values
-	if(!IsDataValid(boundaries))
-	{
-		SetDefaultValues();
-		return;
-	}
-
-	_colorBoundaries = boundaries;
-}
-
-
 void BoundaryCommand::Save()
 {
     uint16_t dataLength = 0;
-    uint8_t* dataArray;
 
-    if(_dataValid)
-    {
-        _ledController->SetColorBoundaries(_colorBoundaries);
-        dataArray = ToBinary(&dataLength);
+	_ledController->SetColorBoundaries(_colorBoundaries);
+	dataLength = DataToBinary<FrequencyColorBoundaries>(_colorBoundaries, _binaryData);
 
-        _i2cCtrl->WriteDataEEPROM(dataArray, dataLength, _eepromSection);
-    }
+	_i2cCtrl->WriteDataEEPROM(_binaryData, dataLength, _eepromSection);
 }
 
 void BoundaryCommand::Load()
@@ -129,7 +80,51 @@ void BoundaryCommand::Load()
 	uint16_t dataLength = sizeof(FrequencyColorBoundaries);
 
 	_i2cCtrl->ReadDataEEPROM(_binaryData, dataLength, _eepromSection);
-	ToStruct(_binaryData);
+	FrequencyColorBoundaries boundaries = BinaryToData<FrequencyColorBoundaries>(_binaryData);
+
+	if(boundaries.IsDataValid())
+	{
+		_colorBoundaries = boundaries;
+		_ledController->SetColorBoundaries(boundaries);
+	}
+}
+
+void BoundaryCommand::SendCommandResponse(CommandStatus errorStatus)
+{
+    switch(errorStatus)
+    {
+        case Valid:
+			sprintf(_messageBuffer, "Valid Boundary Command \n");
+            break;
+
+        // case WrongCommandString:
+		// 	sprintf(messageBuffer, "Valid Filter Command");
+        //     _uartCtrl->Transmit((uint8_t*)"Wrong Command String");
+        //     break;
+
+        case WrongParamCount:
+            sprintf(_messageBuffer, "Wrong Parameter Count, Expected %i \n", _numberOfParams);
+            break;
+
+        case WrongParamValue:
+			sprintf(_messageBuffer, "Wrong Parameter Value \n");
+            break;
+
+		case Read:
+			Print();
+			return;
+
+		case WrongCommandString:
+            return;
+    }
+
+	_uartCtrl->Transmit((uint8_t*)_messageBuffer);
+}
+
+char* BoundaryCommand::ToString()
+{
+	_colorBoundaries.ToString(_toStringBuffer);
+	return _toStringBuffer;
 }
 
 BoundaryCommand::~BoundaryCommand()

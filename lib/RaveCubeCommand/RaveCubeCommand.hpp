@@ -24,6 +24,7 @@
 enum CommandStatus
 {
     Valid,
+    Read,
     WrongCommandString,
     WrongParamCount,
     WrongParamValue
@@ -34,25 +35,57 @@ class RaveCubeCommand
 protected:
     UartController* _uartCtrl;
     I2CController* _i2cCtrl;
+    
+    char _messageBuffer[120];
+    char _toStringBuffer[120];
 
-    virtual void SetDefaultValues();
-    virtual uint8_t* ToBinary(uint16_t* dataLength);
-    virtual void ToStruct(uint8_t* dataArray);
-
-    void SendCommandResponse(CommandStatus errorStatus);
+    /// @brief Buffer for the binary data conversion
+    uint8_t  _binaryData[40];
 
 public:
     RaveCubeCommand(UartController* uartCtrl, I2CController* i2cController)
     {
         _uartCtrl = uartCtrl;
         _i2cCtrl = i2cController;
-    };
+    }
 
     ~RaveCubeCommand();
 
-    virtual CommandStatus Parse(char* str);
-    virtual void Save();
-    virtual void Load();
+    template <typename T> 
+    T BinaryToData(uint8_t* binaryInput)
+    {
+        uint32_t dataLength = sizeof(T);
+        T data;
+
+        memset(&data, 0, (size_t)dataLength);
+        memcpy(&data, binaryInput, dataLength);
+
+        return data;
+    }
+
+    /// @brief Returns data in binary form
+    /// @tparam T 
+    /// @param dataStruct 
+    /// @param binaryOutput 
+    /// @return The length of the data, rounded up to the next power of 2
+    template <typename T>
+    uint32_t DataToBinary(T dataStruct, uint8_t* binaryOutput)
+    {
+        uint32_t dataLength = sizeof(T);
+
+        memset(binaryOutput, 0, (size_t)dataLength);
+        memcpy(binaryOutput, &dataStruct, (size_t)dataLength);
+
+        return dataLength;
+    }
+
+    virtual char* ToString() = 0;
+    virtual CommandStatus Parse(char* str) = 0;
+    virtual void Save() = 0;
+    virtual void Load() = 0;
+    virtual void SendCommandResponse(CommandStatus errorStatus) = 0;
+
+    void Print();
 
     static uint32_t NextPowerOfTwo(uint32_t x);
 };

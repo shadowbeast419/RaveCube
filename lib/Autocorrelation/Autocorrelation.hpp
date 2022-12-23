@@ -30,7 +30,7 @@ public:
     Autocorrelation();
     ~Autocorrelation();     
 
-    void                            Init(SettingsController* settingsCtrl);
+    void                            Init();
     void                            AddRgbBrightness(RgbLedBrightness rgbBrightness);
     float32_t*                      Autocorrelate(int16_t* maxIndex, ColorSelection color);
 
@@ -50,7 +50,6 @@ private:
     float32_t                       CalculateDeviationOfBuffer(float32_t mean, ColorSelection color);
     float32_t                       GetElementOfBuffer(uint16_t index, ColorSelection color);
 
-    SettingsController*             _settingsCtrl = NULL;
     uint16_t                        _sequenceIntervals = MAX_SEQUENCE_INTERVALS;
     RingBufferNodeRgbBrightness     _ringBuffer[MAX_SEQUENCE_INTERVALS];
     RingBufferNodeRgbBrightness*    _currentRingNode = NULL;

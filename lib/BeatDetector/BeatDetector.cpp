@@ -3,12 +3,11 @@
 #include <main.hpp>
 #include <BeatDetector.hpp>
 
-BeatDetector::BeatDetector(SettingsController* settingsCtrl, UartController* uartCtrl, 
+BeatDetector::BeatDetector(UartController* uartCtrl, 
     uint32_t sampleFrequency, uint16_t sampleCount)
 {
-    _settingsCtrl = settingsCtrl;
     _uartCtrl = uartCtrl;
-    _correlation.Init(_settingsCtrl);
+    _correlation.Init();
     _sampleFrequency = sampleFrequency;
     _sampleCount = sampleCount;
     _periodOfLag = (float32_t)_sampleCount / (float32_t)_sampleFrequency;   // Duration of one "Lag" value
@@ -250,7 +249,7 @@ void BeatDetector::GetBpmBoundaries(uint16_t* minValue, uint16_t* maxValue)
     *minValue = 60.0f / (_correlation.MaxLag * _periodOfLag);
 }
 
-bool BeatDetector::CalculateFilterLevels(CorrelationResult result, FilterLevels* filterLevels)
+bool BeatDetector::CalculateFilterLevels(CorrelationResult result, FilterLevelsColor* filterLevels)
 {
     if(result.Bpm.Red == 0 || result.Bpm.Green == 0 || result.Bpm.Blue == 0)
     {
@@ -264,8 +263,8 @@ bool BeatDetector::CalculateFilterLevels(CorrelationResult result, FilterLevels*
 
     GetBpmBoundaries(&bpmMin, &bpmMax);
 
-    k = ((float32_t)COLOR_FILTER_ORDER_MIN - (float32_t)COLOR_FILTER_ORDER_MAX) / ((float32_t)bpmMax - (float32_t)bpmMin);
-    d = (float32_t)COLOR_FILTER_ORDER_MIN - ((float32_t)bpmMax * k);
+    k = ((float32_t)FilterLevelsColor::FilterLevelsMin - (float32_t)FilterLevelsColor::FilterLevelsMax) / ((float32_t)bpmMax - (float32_t)bpmMin);
+    d = (float32_t)FilterLevelsColor::FilterLevelsMin - ((float32_t)bpmMax * k);
 
     k = k * _bpmToFilterSensibility;
     d = d / _bpmToFilterSensibility;
@@ -275,25 +274,25 @@ bool BeatDetector::CalculateFilterLevels(CorrelationResult result, FilterLevels*
     filterLevels->BlueBrightness = (uint16_t)(k * (float32_t)result.Bpm.Blue + d);
 
     // Red color check
-    if(filterLevels->RedBrightness < COLOR_FILTER_ORDER_MIN)
-        filterLevels->RedBrightness = COLOR_FILTER_ORDER_MIN;
+    if(filterLevels->RedBrightness < FilterLevelsColor::FilterLevelsMin)
+        filterLevels->RedBrightness = FilterLevelsColor::FilterLevelsMin;
 
-    if(filterLevels->RedBrightness >= COLOR_FILTER_ORDER_MAX)
-        filterLevels->RedBrightness = COLOR_FILTER_ORDER_MAX - 1;
+    if(filterLevels->RedBrightness >= FilterLevelsColor::FilterLevelsMax)
+        filterLevels->RedBrightness = FilterLevelsColor::FilterLevelsMax - 1;
 
     // Green color check
-    if(filterLevels->GreenBrightness < COLOR_FILTER_ORDER_MIN)
-        filterLevels->GreenBrightness = COLOR_FILTER_ORDER_MIN;
+    if(filterLevels->GreenBrightness < FilterLevelsColor::FilterLevelsMin)
+        filterLevels->GreenBrightness = FilterLevelsColor::FilterLevelsMin;
 
-    if(filterLevels->GreenBrightness >= COLOR_FILTER_ORDER_MAX)
-        filterLevels->GreenBrightness = COLOR_FILTER_ORDER_MAX - 1;
+    if(filterLevels->GreenBrightness >= FilterLevelsColor::FilterLevelsMax)
+        filterLevels->GreenBrightness = FilterLevelsColor::FilterLevelsMax - 1;
 
     // Blue color check
-    if(filterLevels->BlueBrightness < COLOR_FILTER_ORDER_MIN)
-        filterLevels->BlueBrightness = COLOR_FILTER_ORDER_MIN;
+    if(filterLevels->BlueBrightness < FilterLevelsColor::FilterLevelsMin)
+        filterLevels->BlueBrightness = FilterLevelsColor::FilterLevelsMin;
 
-    if(filterLevels->BlueBrightness >= COLOR_FILTER_ORDER_MAX)
-        filterLevels->BlueBrightness = COLOR_FILTER_ORDER_MAX - 1;
+    if(filterLevels->BlueBrightness >= FilterLevelsColor::FilterLevelsMax)
+        filterLevels->BlueBrightness = FilterLevelsColor::FilterLevelsMax - 1;
 
     return true;
 }

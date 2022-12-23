@@ -242,75 +242,75 @@ void I2CController::HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
 	}
 }
 
-void I2CController::WriteDataEEPROM(SettingsFrame* data, uint8_t section)
-{
-	uint8_t* address = _aTxBuffer;
+// void I2CController::WriteDataEEPROM(SettingsFrame* data, uint8_t section)
+// {
+// 	uint8_t* address = _aTxBuffer;
 
-	memcpy(address, &data->amplitude, sizeof(data->amplitude));
-	address += sizeof(data->amplitude);
+// 	memcpy(address, &data->amplitude, sizeof(data->amplitude));
+// 	address += sizeof(data->amplitude);
 
-	memcpy(address, &data->boundaries, sizeof(data->boundaries));
-	address += sizeof(data->boundaries);
+// 	memcpy(address, &data->boundaries, sizeof(data->boundaries));
+// 	address += sizeof(data->boundaries);
 
-	memcpy(address, &data->filterOrders, sizeof(data->filterOrders));
-	address += sizeof(data->filterOrders);
+// 	memcpy(address, &data->filterOrders, sizeof(data->filterOrders));
+// 	address += sizeof(data->filterOrders);
 
-	memcpy(address, &data->controlFlag, sizeof(data->controlFlag));
-	address += sizeof(data->controlFlag);
+// 	memcpy(address, &data->controlFlag, sizeof(data->controlFlag));
+// 	address += sizeof(data->controlFlag);
 
-	memcpy(address, &data->factors, sizeof(data->factors));
-	address += sizeof(data->factors);
+// 	memcpy(address, &data->factors, sizeof(data->factors));
+// 	address += sizeof(data->factors);
 
-	memcpy(address, &data->gammaStatus, sizeof(data->gammaStatus));
-	address += sizeof(data->gammaStatus);
+// 	memcpy(address, &data->gammaStatus, sizeof(data->gammaStatus));
+// 	address += sizeof(data->gammaStatus);
 
-	memcpy(address, &data->ledStatus, sizeof(data->ledStatus));
-	address += sizeof(data->ledStatus);
+// 	memcpy(address, &data->ledStatus, sizeof(data->ledStatus));
+// 	address += sizeof(data->ledStatus);
 
-	uint16_t dataToWrite = sizeof(data->amplitude) + sizeof(data->boundaries) +
-			sizeof(data->filterOrders) + sizeof(data->controlFlag) + sizeof(data->factors)
-			+ sizeof(data->gammaStatus) + sizeof(data->ledStatus);
+// 	uint16_t dataToWrite = sizeof(data->amplitude) + sizeof(data->boundaries) +
+// 			sizeof(data->filterOrders) + sizeof(data->controlFlag) + sizeof(data->factors)
+// 			+ sizeof(data->gammaStatus) + sizeof(data->ledStatus);
 
-	uint16_t roundedUpDataSize = NextPowerOfTwo(dataToWrite);
+// 	uint16_t roundedUpDataSize = NextPowerOfTwo(dataToWrite);
 
-	TransmitData(section * EEPROM_SECTIONSIZE, roundedUpDataSize);
+// 	TransmitData(section * EEPROM_SECTIONSIZE, roundedUpDataSize);
 
-	// Clear transmit buffer
-	memset(_aTxBuffer, 0, roundedUpDataSize);
-}
+// 	// Clear transmit buffer
+// 	memset(_aTxBuffer, 0, roundedUpDataSize);
+// }
 
-void I2CController::ReadDataEEPROM(SettingsFrame* data, uint8_t section)
-{
-	uint16_t dataToRead = sizeof(data->amplitude) + sizeof(data->boundaries) +
-			sizeof(data->filterOrders) + sizeof(data->controlFlag) + sizeof(data->factors)
-			+ sizeof(data->gammaStatus) + sizeof(data->ledStatus);
+// void I2CController::ReadDataEEPROM(SettingsFrame* data, uint8_t section)
+// {
+// 	uint16_t dataToRead = sizeof(data->amplitude) + sizeof(data->boundaries) +
+// 			sizeof(data->filterOrders) + sizeof(data->controlFlag) + sizeof(data->factors)
+// 			+ sizeof(data->gammaStatus) + sizeof(data->ledStatus);
 
-	uint8_t* address = _aRxBuffer;
+// 	uint8_t* address = _aRxBuffer;
 
-	ReceiveData(section * EEPROM_SECTIONSIZE, dataToRead);
-	HAL_Delay(EEPROM_WRITE * 2);
+// 	ReceiveData(section * EEPROM_SECTIONSIZE, dataToRead);
+// 	HAL_Delay(EEPROM_WRITE * 2);
 
-	memcpy(&data->amplitude, address , sizeof(data->amplitude));
-	address += sizeof(data->amplitude);
+// 	memcpy(&data->amplitude, address , sizeof(data->amplitude));
+// 	address += sizeof(data->amplitude);
 
-	memcpy(&data->boundaries, address, sizeof(data->boundaries));
-	address += sizeof(data->boundaries);
+// 	memcpy(&data->boundaries, address, sizeof(data->boundaries));
+// 	address += sizeof(data->boundaries);
 
-	memcpy(&data->filterOrders, address, sizeof(data->filterOrders));
-	address += sizeof(data->filterOrders);
+// 	memcpy(&data->filterOrders, address, sizeof(data->filterOrders));
+// 	address += sizeof(data->filterOrders);
 
-	memcpy(&data->controlFlag, address,  sizeof(data->controlFlag));
-	address += sizeof(data->controlFlag);
+// 	memcpy(&data->controlFlag, address,  sizeof(data->controlFlag));
+// 	address += sizeof(data->controlFlag);
 
-	memcpy(&data->factors, address, sizeof(data->factors));
-	address += sizeof(data->factors);
+// 	memcpy(&data->factors, address, sizeof(data->factors));
+// 	address += sizeof(data->factors);
 
-	memcpy(&data->gammaStatus, address, sizeof(data->gammaStatus));
-	address += sizeof(data->gammaStatus);
+// 	memcpy(&data->gammaStatus, address, sizeof(data->gammaStatus));
+// 	address += sizeof(data->gammaStatus);
 
-	memcpy(&data->ledStatus, address, sizeof(data->ledStatus));
-	address += sizeof(data->ledStatus);
-}
+// 	memcpy(&data->ledStatus, address, sizeof(data->ledStatus));
+// 	address += sizeof(data->ledStatus);
+// }
 
 /// @brief 
 /// @param data 
@@ -321,9 +321,8 @@ void I2CController::WriteDataEEPROM(uint8_t* data, uint16_t length, uint8_t sect
 	uint8_t* dataBuffer = _aTxBuffer;
 	memcpy(data, dataBuffer, length);
 
-	// ToDo:
-	// Round of datasize necessary?
-	TransmitData(section * EEPROM_SECTIONSIZE, length);
+	uint16_t roundedUpDataSize = NextPowerOfTwo(length);
+	TransmitData(section * EEPROM_SECTIONSIZE, roundedUpDataSize);
 
 	// Clear transmit buffer
 	memset(_aTxBuffer, 0, length);
@@ -564,7 +563,7 @@ void I2CController::HAL_I2C_ClearBusyFlagErrata_2_14_7(I2C_HandleTypeDef *hi2c)
 	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
 	GPIO_InitStruct.Alternate = GPIO_AF4_I2C1;
 	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
+			// raveCtrl.ExecuteCommand(msgStr);
    // 13
    hi2c->Instance->CR1 |= I2C_CR1_SWRST;
 

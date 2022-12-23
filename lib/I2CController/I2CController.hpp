@@ -11,7 +11,7 @@
 #include "stm32g4xx_hal.h"
 #include <main.hpp>
 #include <string.h>
-#include <SettingsStructs.hpp>
+
 
 #define TX_BUFFER_SIZE 128
 #define RX_BUFFER_SIZE 128
@@ -60,8 +60,8 @@ public:
 	void WriteDataEEPROM(uint8_t* data, uint16_t length, uint8_t section);
 	void ReadDataEEPROM(uint8_t* receiveBuffer, uint8_t length, uint8_t section);
 
-	void WriteDataEEPROM(SettingsFrame* data, uint8_t section);
-	void ReadDataEEPROM(SettingsFrame* data, uint8_t section);
+	// void WriteDataEEPROM(SettingsFrame* data, uint8_t section);
+	// void ReadDataEEPROM(SettingsFrame* data, uint8_t section);
 };
 
 #endif /* INC_I2CCONTROLLER_H_ */
