@@ -335,7 +335,7 @@ void I2CController::WriteDataEEPROM(uint8_t* data, uint16_t length, uint8_t sect
 void I2CController::ReadDataEEPROM(uint8_t* receiveBuffer, uint8_t length, uint8_t section)
 {
 	uint8_t* dataBuffer = _aRxBuffer;
-
+	
 	ReceiveData(section * EEPROM_SECTIONSIZE, length);
 	HAL_Delay(EEPROM_WRITE * 2);
 

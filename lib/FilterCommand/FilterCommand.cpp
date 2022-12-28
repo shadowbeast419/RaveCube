@@ -7,6 +7,9 @@ FilterCommand::FilterCommand(UartController* uartCtrl, I2CController* i2cCtrl, M
 	this->_movingAvgFilter = movingAvgFilter;
 }
 
+/// @brief Parses the filter command and stores it to the class member
+/// @param str 
+/// @return 
 CommandStatus FilterCommand::Parse(char* str)
 {
     // Wrong Command
@@ -65,9 +68,10 @@ CommandStatus FilterCommand::Parse(char* str)
     return WrongParamValue;
 }
 
+/// @brief Stores the FilterLevels to MovingAverageFilter and EEPROM
 void FilterCommand::Save()
 {
-    uint16_t dataLength = 0;
+    uint16_t dataLength = sizeof(FilterLevels);
 	uint8_t receiveBuffer[dataLength];
 
 	_movingAvgFilter->SetFilterOrder(_filterLevels);
@@ -84,26 +88,27 @@ void FilterCommand::Save()
 	{
 		_uartCtrl->Transmit((uint8_t*)"FilterLevels successfully written to EEPROM");
 		_filterLevels.ToString(_toStringBuffer);
-		_uartCtrl->Transmit((uint8_t*) _toStringBuffer); 
+		_uartCtrl->Transmit((uint8_t*) _toStringBuffer);
+
+		return; 
 	}
-	else
-	{
-		// Data written/read from EEPROM is not valid
-		
-	}
+
+	// Data written/read from EEPROM is not valid
+	_uartCtrl->Transmit((uint8_t*)"FilterLevels write to EEPROM not successfull");		
 }
 
+/// @brief Loads the FilterLevels from EEPROM
 void FilterCommand::Load()
 {
 	uint16_t dataLength = sizeof(FilterLevels);
 
 	_i2cCtrl->ReadDataEEPROM(_binaryData, dataLength, _eepromSection);
-	FilterLevels filterLevels = BinaryToData<FilterLevels>(_binaryData);
+	FilterLevels filterLevelsEEPROM = BinaryToData<FilterLevels>(_binaryData);
 
-	if(filterLevels.IsDataValid())
+	if(filterLevelsEEPROM.IsDataValid())
 	{
-		_movingAvgFilter->SetFilterOrder(filterLevels);
-		_filterLevels = filterLevels;
+		_movingAvgFilter->SetFilterOrder(filterLevelsEEPROM);
+		_filterLevels = filterLevelsEEPROM;
 
 		_uartCtrl->Transmit((uint8_t*)"FilterLevels loaded successfully from EEPROM");
 
@@ -113,7 +118,7 @@ void FilterCommand::Load()
 	// Data is not valid -> Write default values to EEPROM
 	_uartCtrl->Transmit((uint8_t*)"FilterLevels loaded from EEPROM not Valid");
 
-	filterLevels.ToString(_toStringBuffer);
+	filterLevelsEEPROM.ToString(_toStringBuffer);
 	_uartCtrl->Transmit((uint8_t*) _toStringBuffer); 
 }
 

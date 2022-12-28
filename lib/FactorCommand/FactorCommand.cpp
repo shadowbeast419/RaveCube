@@ -9,7 +9,6 @@ FactorCommand::FactorCommand(UartController* uartCtrl, I2CController* i2cCtrl, L
     _ledController = ledController;
 }
 
-
 CommandStatus FactorCommand::Parse(char* str)
 {
     // Wrong Command
@@ -61,13 +60,31 @@ CommandStatus FactorCommand::Parse(char* str)
 
 void FactorCommand::Save()
 {
-    uint32_t dataLength = 0;
+    uint32_t dataLength = sizeof(BrightnessFactors);
+    uint8_t receiveBuffer[dataLength];
 
     _ledController->SetBrightnessFactors(_brightnessFactors);
 
     dataLength = DataToBinary<BrightnessFactors>(_brightnessFactors, _binaryData);
     _i2cCtrl->WriteDataEEPROM(_binaryData, dataLength, _eepromSection);
 
+	// Check if data has been written properly
+	_i2cCtrl->ReadDataEEPROM(receiveBuffer, dataLength, _eepromSection);
+	BrightnessFactors brightnessFactorsEEPROM = BinaryToData<BrightnessFactors>(_binaryData);
+
+	if(brightnessFactorsEEPROM == _brightnessFactors)
+	{
+		_uartCtrl->Transmit((uint8_t*)"BrightnessFactors successfully written to EEPROM");
+		_brightnessFactors.ToString(_toStringBuffer);
+		_uartCtrl->Transmit((uint8_t*) _toStringBuffer);
+
+		return; 
+	}
+
+	// Data written/read from EEPROM is not valid
+	_uartCtrl->Transmit((uint8_t*)"BrightnessFactors write to EEPROM not successfull");
+    brightnessFactorsEEPROM.ToString(_toStringBuffer);
+    _uartCtrl->Transmit((uint8_t*) _toStringBuffer);
 }
 
 void FactorCommand::Load()
@@ -75,9 +92,22 @@ void FactorCommand::Load()
 	uint16_t dataLength = sizeof(BrightnessFactors);
 
 	_i2cCtrl->ReadDataEEPROM(_binaryData, dataLength, _eepromSection);
-	_brightnessFactors = BinaryToData<BrightnessFactors>(_binaryData);
+	BrightnessFactors brightnessFactorsEEPROM = BinaryToData<BrightnessFactors>(_binaryData);
 
-    _ledController->SetBrightnessFactors(_brightnessFactors);
+    if(brightnessFactorsEEPROM.IsDataValid())
+    {
+        _ledController->SetBrightnessFactors(brightnessFactorsEEPROM);
+        _brightnessFactors = brightnessFactorsEEPROM;
+
+        _uartCtrl->Transmit((uint8_t*)"BrightnessFactors loaded successfully from EEPROM");
+
+        return;
+    }
+
+    // Data not valid
+    _uartCtrl->Transmit((uint8_t*) "BrightnessFactors loaded from EEPROM not valid");
+    _brightnessFactors.ToString(_toStringBuffer);
+    _uartCtrl->Transmit((uint8_t*)_toStringBuffer);
 }
 
 
