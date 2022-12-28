@@ -65,14 +65,52 @@ CommandStatus BoundaryCommand::Parse(char* str)
     return WrongParamValue;
 }
 
+/*
+
+    uint32_t dataLength = sizeof(BrightnessFactors);
+    uint8_t receiveBuffer[dataLength];
+
+    _ledController->SetBrightnessFactors(_brightnessFactors);
+
+    dataLength = DataToBinary<BrightnessFactors>(_brightnessFactors, _binaryData);
+    _i2cCtrl->WriteDataEEPROM(_binaryData, dataLength, _eepromSection);
+
+	// Check if data has been written properly
+	_i2cCtrl->ReadDataEEPROM(receiveBuffer, dataLength, _eepromSection);
+	BrightnessFactors brightnessFactorsEEPROM = BinaryToData<BrightnessFactors>(_binaryData);
+
+	if(brightnessFactorsEEPROM == _brightnessFactors)
+	{
+		_uartCtrl->Transmit((uint8_t*)"BrightnessFactors successfully written to EEPROM");
+		_brightnessFactors.ToString(_toStringBuffer);
+		_uartCtrl->Transmit((uint8_t*) _toStringBuffer);
+
+		return; 
+	}
+
+*/
+
 void BoundaryCommand::Save()
 {
-    uint16_t dataLength = 0;
+    uint16_t dataLength = sizeof(FrequencyColorBoundaries);
+	uint8_t receiveBuffer[dataLength];
 
 	_ledController->SetColorBoundaries(_colorBoundaries);
-	dataLength = DataToBinary<FrequencyColorBoundaries>(_colorBoundaries, _binaryData);
 
+	dataLength = DataToBinary<FrequencyColorBoundaries>(_colorBoundaries, _binaryData);
 	_i2cCtrl->WriteDataEEPROM(_binaryData, dataLength, _eepromSection);
+
+	_i2cCtrl->ReadDataEEPROM(receiveBuffer, dataLength, _eepromSection);
+	FrequencyColorBoundaries boundariesEEPROM = BinaryToData<FrequencyColorBoundaries>(_binaryData);
+
+	if(boundariesEEPROM == _colorBoundaries)
+	{
+		_uartCtrl->Transmit((uint8_t*)"BrightnessFactors successfully written to EEPROM");
+		boundariesEEPROM.ToString(_toStringBuffer);
+		_uartCtrl->Transmit((uint8_t*) _toStringBuffer);
+
+		return; 
+	}
 }
 
 void BoundaryCommand::Load()
@@ -80,13 +118,21 @@ void BoundaryCommand::Load()
 	uint16_t dataLength = sizeof(FrequencyColorBoundaries);
 
 	_i2cCtrl->ReadDataEEPROM(_binaryData, dataLength, _eepromSection);
-	FrequencyColorBoundaries boundaries = BinaryToData<FrequencyColorBoundaries>(_binaryData);
+	FrequencyColorBoundaries boundariesEEPROM = BinaryToData<FrequencyColorBoundaries>(_binaryData);
 
-	if(boundaries.IsDataValid())
+	if(boundariesEEPROM.IsDataValid())
 	{
-		_colorBoundaries = boundaries;
-		_ledController->SetColorBoundaries(boundaries);
+		_colorBoundaries = boundariesEEPROM;
+		_ledController->SetColorBoundaries(boundariesEEPROM);
+
+		_uartCtrl->Transmit((uint8_t*)"ColorBoundaries loaded successfully from EEPROM");
+		
+		return;
 	}
+
+    _uartCtrl->Transmit((uint8_t*) "ColorBoundaries loaded from EEPROM not valid");
+    boundariesEEPROM.ToString(_toStringBuffer);
+    _uartCtrl->Transmit((uint8_t*)_toStringBuffer);
 }
 
 void BoundaryCommand::SendCommandResponse(CommandStatus errorStatus)
