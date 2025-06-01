@@ -89,8 +89,11 @@ void Error_Handler(void);
 #define CUT_OFF_FREQUENCY 6000
 #define MAX_FFT_RESULT_INDEX ((uint16_t)(CUT_OFF_FREQUENCY / HZ_PER_SAMPLE))
 
-#define ENABLE_WINDOWING
-#define ENABLE_STARTUP_SEQUENCE
+// For usage with RaveCubeGUI
+// #define VERBOSE_MODE
+
+// #define ENABLE_WINDOWING
+// #define ENABLE_STARTUP_SEQUENCE
 
 #define COMMAND_COUNT 3
 

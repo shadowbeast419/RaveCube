@@ -25,11 +25,10 @@ public:
 
 private:
 	/// @brief Apply scaling factor for better accuracy in FFT (floats)
-	const float32_t VoltageScalingFactor = 14.0f;
+	const float32_t VoltageScalingFactor = 1.0f;
 
 	float32_t 	_voltageValues[FFT_SAMPLE_COUNT];
 	float32_t 	_rmsValue = 0.0f;
-	float32_t	_offsetVoltage = 0.0f;
 
 
 #ifdef ENABLE_WINDOWING

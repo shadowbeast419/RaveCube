@@ -35,29 +35,26 @@ VoltageSignal::~VoltageSignal()
 
 void VoltageSignal::UpdateAdcValues(uint16_t* adcValues)
 {
-	uint32_t squaredSum = 0.0f;
-	int32_t sum = 0.0f;
-	int16_t average = 0;
+	float32_t squaredSum = 0.0f;
+	float32_t average = 0.0f;
 
 	for(uint32_t i = 0; i < FFT_SAMPLE_COUNT; i++)
 	{
 		_voltageValues[i] = ((float32_t)adcValues[i] * (2971.0f * VoltageScalingFactor  / (float32_t)0xFFF));
-		sum += _voltageValues[i];
+		squaredSum += _voltageValues[i] * _voltageValues[i];
 	}
 
-	average = sum / FFT_SAMPLE_COUNT;
-	_offsetVoltage = average;
+	average = squaredSum / (float32_t)FFT_SAMPLE_COUNT;
+	_rmsValue = sqrtf(average);
 
-	// Remove DC part
-	for(uint32_t i = 0; i < FFT_SAMPLE_COUNT; i++)
-	{
-		_voltageValues[i] -= average;
-		squaredSum += (_voltageValues[i] * _voltageValues[i]);
-	}
+	// // Remove DC part
+	// for(uint32_t i = 0; i < FFT_SAMPLE_COUNT; i++)
+	// {
+	// 	_voltageValues[i] -= average;
+	// 	squaredSum += (_voltageValues[i] * _voltageValues[i]);
+	// }
 
-	squaredSum /= FFT_SAMPLE_COUNT;
-	_rmsValue = sqrtf(squaredSum);
-
+	// squaredSum /= FFT_SAMPLE_COUNT;
 }
 
 float32_t VoltageSignal::GetRMSValue()

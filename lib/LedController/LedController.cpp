@@ -416,7 +416,8 @@ RgbLedBrightness LedController::TransfromHSVToRGB(HSVBrightness source)
 
 void LedController::CalculateFrequencyEnergy(FFT_Result* fftResult, float32_t* red, float32_t* green, float32_t* blue)
 {
-	for(uint16_t i = 0; i < MAX_FFT_RESULT_INDEX; i++)
+	// Skip the first FFT element (DC Part)
+	for(uint16_t i = 1; i < MAX_FFT_RESULT_INDEX; i++)
 	{
 		if((fftResult[i].frequency >= _colorBoundaries.Red.Min) &&
 				(fftResult[i].frequency < _colorBoundaries.Red.Max))

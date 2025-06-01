@@ -71,6 +71,7 @@ FFT fft;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void SendStreamingData(void);
 
 /**
   * @brief  The application entry point.
@@ -118,7 +119,7 @@ int main(void)
 	}
 
 	BeatDetector beatDetector(&uart2, (uint32_t)SAMPLE_FREQ, (uint16_t)FFT_SAMPLE_COUNT);
-	beatDetector.EnableOutputToUart = false;
+	beatDetector.EnableOutputToUart = true;
 	beatDetector.UseAbsValueOfCorrelation = true;
 
 	CorrelationResult corrResult = {0};
@@ -158,6 +159,10 @@ int main(void)
 			#ifndef ENABLE_STARTUP_SEQUENCE
 			ledCtrl->CalculateBrightness(fftResult, vSignal.GetRMSValue(), true);	
 			#endif
+			
+			#ifdef VERBOSE_MODE
+			SendStreamingData();
+			#endif
 
 			corrResult = beatDetector.CalculateBeatsPerMinute(ledCtrl->GetCurrentUnfilteredBrightness());
 			calcSuccessful = beatDetector.CalculateFilterLevels(corrResult, &calculatedFilterLevels);
@@ -193,6 +198,25 @@ int main(void)
 		}
 	}
 }
+
+void SendStreamingData()
+{
+	char transmitBuffer[100];
+
+	for(uint16_t i = 0; i < MAX_FFT_RESULT_INDEX; i++)
+	{
+		sprintf(transmitBuffer, "_fft %u %f_\n", fftResult[i].frequency, fftResult[i].absoluteValue);
+
+		uart2.Transmit((uint8_t*)transmitBuffer);
+		while(uart2.IsTxBusy());
+	}
+
+	sprintf(transmitBuffer, "_volt %f %f_\n", movingAvgFilter.GetAverageVoltage(), movingAvgFilter.GetAveragePeakVoltage());
+
+	uart2.Transmit((uint8_t*)transmitBuffer);
+	while(uart2.IsTxBusy());
+}
+
 
 /**
   * @brief System Clock Configuration
