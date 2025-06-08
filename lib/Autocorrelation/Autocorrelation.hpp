@@ -22,7 +22,7 @@ struct CorrelationCoefficients
     float32_t Blue;
 };
 
-#define MAX_SEQUENCE_INTERVALS 80
+#define MAX_SEQUENCE_INTERVALS 200
 
 class Autocorrelation
 {
@@ -49,6 +49,8 @@ private:
     float32_t                       CalculateMeanOfBuffer(ColorSelection color);
     float32_t                       CalculateDeviationOfBuffer(float32_t mean, ColorSelection color);
     float32_t                       GetElementOfBuffer(uint16_t index, ColorSelection color);
+    void                            StoreElementsIntoBuffer(ColorSelection color);
+
 
     uint16_t                        _sequenceIntervals = MAX_SEQUENCE_INTERVALS;
     RingBufferNodeRgbBrightness     _ringBuffer[MAX_SEQUENCE_INTERVALS];
@@ -58,6 +60,7 @@ private:
 
     // Only create lags-array where elements are inside with more than one sample 
     // everything above doesn't make sense
+    float32_t                       _lagArraySymmetric[MAX_SEQUENCE_INTERVALS * 2];
     float32_t                       _lagArrayRed[MAX_SEQUENCE_INTERVALS];
     float32_t                       _lagArrayGreen[MAX_SEQUENCE_INTERVALS];
     float32_t                       _lagArrayBlue[MAX_SEQUENCE_INTERVALS];

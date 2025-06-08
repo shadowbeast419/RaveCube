@@ -185,7 +185,7 @@ void BeatDetector::CalculateMaxLagValues(ColorSelection color, uint16_t* maxLag,
     // Skip the lags smaller than minLag
     for(uint16_t lag = _correlation.MinLag; lag < maxCorrelationIndex; lag++)
     {
-        lagArrayIndex = lag - _correlation.MinLag;
+        lagArrayIndex = lag;
 
         // Skip the lags higher than maxLag
         if(lag >= _correlation.MaxLag)
@@ -207,6 +207,7 @@ void BeatDetector::CalculateMaxLagValues(ColorSelection color, uint16_t* maxLag,
 uint16_t BeatDetector::CalculateBpmFromLagValue(uint16_t maxLag)
 {
     return (uint16_t)(60.0f / (_periodOfLag * ((float32_t)maxLag)));
+    // return ((200 - 60) / (_correlation.MaxLag - _correlation.MinLag)) * maxLag;
 }
 
 void BeatDetector::WriteResultToUart(ColorSelection color, CorrelationResult result)

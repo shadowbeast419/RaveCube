@@ -24,7 +24,6 @@ void Autocorrelation::InitRingBuffer(uint16_t sequenceIntervals)
 {
     RgbLedBrightness emptyBrightness = {0};
 
-    // Same for amplitude voltage
 	for(uint16_t i = sequenceIntervals - 1; i > 0; i--)
 	{
 		_ringBuffer[i].pPrev = &_ringBuffer[i-1];
@@ -76,10 +75,9 @@ float32_t* Autocorrelation::Autocorrelate(int16_t* maxIndex, ColorSelection colo
         return NULL;
     }
 
-    uint16_t dataCount = _elementCount;
-    float32_t mean = CalculateMeanOfBuffer(color);
-    float32_t deviation = CalculateDeviationOfBuffer(mean, color);
     float32_t* pLagArray = NULL;
+    float32_t maxLagValue = 0.0f;
+    uint32_t maxLagIndex;
 
     switch(color)
     {
@@ -94,30 +92,90 @@ float32_t* Autocorrelation::Autocorrelate(int16_t* maxIndex, ColorSelection colo
             break;
     }
 
-    uint16_t lagArrayIndex = 0;
+    StoreElementsIntoBuffer(color);
 
-    for(uint16_t lag = MinLag; lag < MaxLag; lag++)
-    {   
-        lagArrayIndex = lag - MinLag;
-        pLagArray[lagArrayIndex] = 0.0f;
+    for(uint16_t i = 0; i < _sequenceIntervals * 2; i++)
+    {
+        _lagArraySymmetric[i] = 0.0f;
+    }
 
-        for(uint16_t i = 0; i < dataCount - lagArrayIndex; i++)
-        {
-            pLagArray[lagArrayIndex] += ((GetElementOfBuffer(lagArrayIndex, color) - mean) * 
-                (GetElementOfBuffer(i+lagArrayIndex, color) - mean));
-        }
+    arm_correlate_f32(pLagArray, _sequenceIntervals, pLagArray, _sequenceIntervals, _lagArraySymmetric);
 
-        if(deviation > 0.0f)
-        {
-            pLagArray[lagArrayIndex] /= deviation;
-        }
-        else
-        {
-            pLagArray[lagArrayIndex] = InvalidLagValue;
-        }
+    uint16_t startIndex = _sequenceIntervals - 1;
+
+    for(uint16_t i = 0; i < _sequenceIntervals; i++)
+    {
+        pLagArray[i] = _lagArraySymmetric[startIndex + i];
+    }
+
+    arm_max_f32(pLagArray, _sequenceIntervals, &maxLagValue, &maxLagIndex);
+
+    for(uint16_t i = 0; i < _sequenceIntervals; i++)
+    {
+        pLagArray[i] /= maxLagValue;
     }
 
     return pLagArray;
+ }
+
+void Autocorrelation::StoreElementsIntoBuffer(ColorSelection color)
+{
+    uint16_t dataCount = _elementCount;
+    uint32_t sum = 0;
+    float32_t avg = 0.0f;
+    RingBufferNodeRgbBrightness* currentNode = _currentRingNode;
+
+    for(uint16_t i = 0; i < dataCount; i++)
+    {
+        currentNode = currentNode->pPrev;;
+    }
+
+    for(uint16_t i = 0; i < dataCount; i++)
+    {
+        switch(color)
+        {
+            case Red:
+                _lagArrayRed[i] = (float32_t)currentNode->rgbBrightness.Red;
+                sum += currentNode->rgbBrightness.Red;
+                break;
+
+            case Green:
+                _lagArrayGreen[i] = (float32_t)currentNode->rgbBrightness.Green;
+                sum += currentNode->rgbBrightness.Green;
+
+                break;
+
+            case Blue:
+                _lagArrayBlue[i] = (float32_t)currentNode->rgbBrightness.Blue;
+                sum += currentNode->rgbBrightness.Blue;
+
+                break;
+        }
+
+        currentNode = currentNode->pNext;
+    }
+
+    avg = sum / (float32_t)dataCount;
+
+    for(uint16_t i = 0; i < dataCount; i++)
+    {
+        switch(color)
+        {
+            case Red:
+                _lagArrayRed[i] -= avg;
+                break;
+
+            case Green:
+                _lagArrayGreen[i] -= avg;
+
+                break;
+
+            case Blue:
+                _lagArrayBlue[i] -= avg;
+
+                break;
+        }
+    }
 }
 
 float32_t Autocorrelation::CalculateMeanOfBuffer(ColorSelection color)
@@ -125,6 +183,8 @@ float32_t Autocorrelation::CalculateMeanOfBuffer(ColorSelection color)
     uint16_t dataCount = _elementCount;
     uint32_t sum = 0;
     RingBufferNodeRgbBrightness* currentNode = _currentRingNode;
+
+
 
     for(uint16_t i = 0; i < dataCount; i++)
     {

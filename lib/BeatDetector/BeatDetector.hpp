@@ -9,7 +9,7 @@
 #include <FFT.hpp>
 #include <string>
 
-#define FILTER_ORDER_MAX 15
+#define FILTER_ORDER_MAX 3
 
 struct BeatsPerMinute
 {
@@ -60,7 +60,7 @@ class BeatDetector
         RingBufferNodeBPM*              _currentNode = NULL;
 
         // Should be <1.0 with Max MvgAvg Filter Order < 128 (otherwise too much lightning :D)
-        float32_t                       _bpmToFilterSensibility = 1.0f;
+        float32_t                       _bpmToFilterSensibility = 0.7f;
 };
 
 #endif

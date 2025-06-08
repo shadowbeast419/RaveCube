@@ -119,7 +119,7 @@ int main(void)
 	}
 
 	BeatDetector beatDetector(&uart2, (uint32_t)SAMPLE_FREQ, (uint16_t)FFT_SAMPLE_COUNT);
-	beatDetector.EnableOutputToUart = true;
+	beatDetector.EnableOutputToUart = false;
 	beatDetector.UseAbsValueOfCorrelation = true;
 
 	CorrelationResult corrResult = {0};
@@ -170,7 +170,7 @@ int main(void)
 			if(calcSuccessful)
 			{
 				// raveCtrl.ChangeFilterOrder(updatedFilterLevels, false);
-				ledCtrl->SetColorFilterOrder(calculatedFilterLevels);
+				// ledCtrl->SetColorFilterOrder(calculatedFilterLevels);
 			}
 
 			// raveCtrl.SendStreamingData();
