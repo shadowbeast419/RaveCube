@@ -9,7 +9,8 @@
     "C_Cpp.default.cppStandard": "gnu++20",
     "files.associations": {
         "cmath": "cpp",
-        "arm_math.h": "c"
+        "arm_math.h": "c",
+        "nemath.h": "c"
     },
     "files.exclude": {
         "**/*q15*.c" : true,

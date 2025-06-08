@@ -170,7 +170,7 @@ int main(void)
 			if(calcSuccessful)
 			{
 				// raveCtrl.ChangeFilterOrder(updatedFilterLevels, false);
-				// ledCtrl->SetColorFilterOrder(calculatedFilterLevels);
+				ledCtrl->SetColorFilterOrder(calculatedFilterLevels);
 			}
 
 			// raveCtrl.SendStreamingData();

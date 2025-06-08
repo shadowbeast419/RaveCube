@@ -9,7 +9,7 @@
 #include <FFT.hpp>
 #include <string>
 
-#define FILTER_ORDER_MAX 3
+#define FILTER_ORDER_MAX 15
 
 struct BeatsPerMinute
 {
