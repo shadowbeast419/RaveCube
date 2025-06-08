@@ -157,7 +157,7 @@ int main(void)
 			#endif
 			
 			#ifndef ENABLE_STARTUP_SEQUENCE
-			ledCtrl->CalculateBrightness(fftResult, vSignal.GetRMSValue(), true);	
+			ledCtrl->CalculateBrightness(fftResult, vSignal.GetMeanValue(), true);	
 			#endif
 			
 			#ifdef VERBOSE_MODE
@@ -170,7 +170,7 @@ int main(void)
 			if(calcSuccessful)
 			{
 				// raveCtrl.ChangeFilterOrder(updatedFilterLevels, false);
-				ledCtrl->SetColorFilterOrder(calculatedFilterLevels);
+				// ledCtrl->SetColorFilterOrder(calculatedFilterLevels);
 			}
 
 			// raveCtrl.SendStreamingData();

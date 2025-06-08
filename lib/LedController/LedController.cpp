@@ -75,12 +75,12 @@ void LedController::PeakTimerPeriodElapsedHandler(TIM_HandleTypeDef *htim)
 {
 	if(htim->Instance == _peakTimer.instance)
 	{
-		if(_peakRmsVoltage > 15.0f)
+		if(_peakMeanVoltage > 15.0f)
 		{
-			_movAvgFilter->AddPeakVoltageValue(_peakRmsVoltage);
+			_movAvgFilter->AddPeakVoltageValue(_peakMeanVoltage);
 		}
-
-		_peakRmsVoltage = 0.0f;
+		
+		_peakMeanVoltage = 0.0f;
 	}
 }
 
@@ -145,20 +145,20 @@ void LedController::UpdatePwmSettingsBuffer(uint32_t ledIndexTmp, uint8_t ledIsO
 	}
 }
 
-void LedController::CalculateBrightness(FFT_Result* fftResult, float32_t rmsVoltage, bool startupIterationsComplete)
+void LedController::CalculateBrightness(FFT_Result* fftResult, float32_t meanVoltage, bool startupIterationsComplete)
 {
 	float32_t voltageRatio = 0.0f;
 
-	_movAvgFilter->AddVoltageValue(rmsVoltage);
+	_movAvgFilter->AddVoltageValue(meanVoltage);
 
 	if(!startupIterationsComplete)
 		return;
 
-	_filteredRmsVoltage = _movAvgFilter->GetAverageVoltage();
+	_filteredMeanVoltage = _movAvgFilter->GetAverageVoltage();
 
-	if(_filteredRmsVoltage > _peakRmsVoltage)
+	if(_filteredMeanVoltage > _peakMeanVoltage)
 	{
-		_peakRmsVoltage = _filteredRmsVoltage;
+		_peakMeanVoltage = _filteredMeanVoltage;
 	}
 
 //	_rmsVoltageSumOverInterval += _filteredRmsVoltage;
@@ -183,7 +183,7 @@ void LedController::CalculateBrightness(FFT_Result* fftResult, float32_t rmsVolt
 
 	if(_filteredPeakRmsVoltage > 0.0f)
 	{
-		voltageRatio = (_filteredRmsVoltage / _filteredPeakRmsVoltage) * _brightnessFactors.All;
+		voltageRatio = (_filteredMeanVoltage / _filteredPeakRmsVoltage) * _brightnessFactors.All;
 	}
 
 	HSVBrightness hsvParamsRed = CalculateHSVBrightness(fftResult, voltageRatio, Red);
@@ -294,13 +294,17 @@ HSVBrightness LedController::CalculateHSVBrightness(FFT_Result* fftResult, float
 
 uint16_t LedController::GetMaxFrequencyFromRange(FFT_Result* fftResult, uint16_t lower, uint16_t upper)
 {
-	uint16_t lowerIndex = lower / HZ_PER_SAMPLE;
-	uint16_t upperIndex = upper / HZ_PER_SAMPLE;
-	FFT_Result maxFreq = {0};
+	FFT_Result maxFreq;
 
-	for(uint16_t i = lowerIndex; i <= upperIndex; i++)
+	maxFreq.absoluteValue = 0.0f;
+	maxFreq.frequency = 0;
+
+	for(uint16_t i = 0; i < FFT_SAMPLE_COUNT / 2; i++)
 	{
-		if(fftResult[i].absoluteValue > maxFreq.absoluteValue)
+		if(fftResult->frequency > upper)
+			break;
+
+		if(fftResult[i].frequency >= lower && fftResult[i].absoluteValue > maxFreq.absoluteValue)
 		{
 			maxFreq = fftResult[i];
 		}
@@ -416,8 +420,10 @@ RgbLedBrightness LedController::TransfromHSVToRGB(HSVBrightness source)
 
 void LedController::CalculateFrequencyEnergy(FFT_Result* fftResult, float32_t* red, float32_t* green, float32_t* blue)
 {
+	uint16_t maxResultIndex = MAX_FFT_RESULT_INDEX;
+
 	// Skip the first FFT element (DC Part)
-	for(uint16_t i = 1; i < MAX_FFT_RESULT_INDEX; i++)
+	for(uint16_t i = 0; i < maxResultIndex; i++)
 	{
 		if((fftResult[i].frequency >= _colorBoundaries.Red.Min) &&
 				(fftResult[i].frequency < _colorBoundaries.Red.Max))
@@ -630,7 +636,7 @@ RgbLedBrightness LedController::GetCurrentUnfilteredBrightness()
 
 float32_t LedController::GetRMSVoltage()
 {
-	return _filteredRmsVoltage;
+	return _filteredMeanVoltage;
 }
 
 float32_t LedController::GetPeakRMSVoltage()

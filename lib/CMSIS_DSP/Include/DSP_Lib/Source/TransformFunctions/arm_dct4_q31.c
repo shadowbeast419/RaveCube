@@ -40,7 +40,7 @@
 
 #include "arm_math.h"
 
-#define SAVE_FLASH
+// #define SAVE_FLASH
 
 /**    
  * @addtogroup DCT4_IDCT4    

@@ -7,9 +7,9 @@
 class FrequencyColorBoundaries : public RaveCubeSetting
 {
 	public:
-		FrequencyBoundary Red = FrequencyBoundary(0, 200);
-		FrequencyBoundary Green = FrequencyBoundary(200, 1500);
-		FrequencyBoundary Blue = FrequencyBoundary(1500, 7000);
+		FrequencyBoundary Red = FrequencyBoundary(1, 200);
+		FrequencyBoundary Green = FrequencyBoundary(200, 2000);
+		FrequencyBoundary Blue = FrequencyBoundary(2000, 10000);
 
 		FrequencyColorBoundaries();
         ~FrequencyColorBoundaries();

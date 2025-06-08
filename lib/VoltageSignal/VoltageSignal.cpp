@@ -35,31 +35,45 @@ VoltageSignal::~VoltageSignal()
 
 void VoltageSignal::UpdateAdcValues(uint16_t* adcValues)
 {
-	float32_t squaredSum = 0.0f;
-	float32_t average = 0.0f;
+	float32_t sum = 0.0f;
+	float32_t absValue = 0.0f;
+	float32_t sumSquared = 0.0f;
+	float32_t rmsValue = 0.0f;
+	float32_t sqrRootResult = 0.0f;
 
 	for(uint32_t i = 0; i < FFT_SAMPLE_COUNT; i++)
 	{
-		_voltageValues[i] = ((float32_t)adcValues[i] * (2971.0f * VoltageScalingFactor  / (float32_t)0xFFF));
-		squaredSum += _voltageValues[i] * _voltageValues[i];
+		_voltageValues[i] = ((float32_t)adcValues[i] * (2971.0f * VoltageScalingFactor  / (float32_t)0xFFF)); // - 1485.0f;
+		sum += _voltageValues[i];
 	}
 
-	average = squaredSum / (float32_t)FFT_SAMPLE_COUNT;
-	_rmsValue = sqrtf(average);
+	_meanValue = sum / (float32_t)FFT_SAMPLE_COUNT;
+	_rmsValue = _meanValue;
 
-	// // Remove DC part
-	// for(uint32_t i = 0; i < FFT_SAMPLE_COUNT; i++)
-	// {
-	// 	_voltageValues[i] -= average;
-	// 	squaredSum += (_voltageValues[i] * _voltageValues[i]);
-	// }
+	for(uint32_t i = 0; i < FFT_SAMPLE_COUNT; i++)
+	{
+		// Remove DC part
+		_voltageValues[i] -= _meanValue;
+		
+		absValue = fabs(_voltageValues[i]);
+		sumSquared +=  absValue * absValue;
+	}
 
-	// squaredSum /= FFT_SAMPLE_COUNT;
+	arm_sqrt_f32(sumSquared / (float32_t)FFT_SAMPLE_COUNT, &sqrRootResult);
+
+	// https://musicinformationretrieval.com/energy.html
+	_rmsValue = sqrRootResult;
+	_meanValue = sqrRootResult;
 }
 
 float32_t VoltageSignal::GetRMSValue()
 {
 	return _rmsValue;
+}
+
+float32_t VoltageSignal::GetMeanValue()
+{
+	return  _meanValue;
 }
 
 float32_t* VoltageSignal::GetSignal()

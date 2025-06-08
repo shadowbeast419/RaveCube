@@ -60,8 +60,8 @@ private:
 
 	const uint16_t							_maxBrightness = 255;
 	float32_t								_filteredPeakRmsVoltage = 0.0f;
-	float32_t								_filteredRmsVoltage = 0.0f;
-	float32_t								_peakRmsVoltage = 0.0f;
+	float32_t								_filteredMeanVoltage = 0.0f;
+	float32_t								_peakMeanVoltage = 0.0f;
 	uint8_t									_dmaBufferNeedsUpdate = SET;
 	LargeIntervalTimer						_peakTimer = LargeIntervalTimer(TIM4, 0.1f);
 
