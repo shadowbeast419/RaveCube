@@ -1,10 +1,18 @@
 
 
-#include <main.hpp>
 #include <BeatDetector.hpp>
 
-BeatDetector::BeatDetector(UartController* uartCtrl, 
-    uint32_t sampleFrequency, uint16_t sampleCount)
+BeatDetector::BeatDetector()
+{
+
+}
+
+BeatDetector::~BeatDetector()
+{
+	// TODO Auto-generated destructor stub
+}
+
+void BeatDetector::Init(UartController* uartCtrl, uint32_t sampleFrequency, uint16_t sampleCount)
 {
     _uartCtrl = uartCtrl;
     _correlation.Init();
@@ -112,10 +120,10 @@ CorrelationResult BeatDetector::AddElementToFilter(CorrelationResult corrResult)
 }
 
 // BPM of 0 means no result
-CorrelationResult BeatDetector::CalculateBeatsPerMinute(RgbLedBrightness rgbBrightness)
+CorrelationResult BeatDetector::CalculateBeatsPerMinute(FFT_Result* fftResult)
 {
     // Adds new FFT Samples to the RingBuffer   
-    _correlation.AddRgbBrightness(rgbBrightness);
+    _correlation.AddFftResult(fftResult);
 
     CorrelationResult corrResult = {0};
     BeatsPerMinute bpm = {0};
@@ -185,7 +193,7 @@ void BeatDetector::CalculateMaxLagValues(ColorSelection color, uint16_t* maxLag,
     // Skip the lags smaller than minLag
     for(uint16_t lag = _correlation.MinLag; lag < maxCorrelationIndex; lag++)
     {
-        lagArrayIndex = lag - _correlation.MinLag;
+        lagArrayIndex = lag;
 
         // Skip the lags higher than maxLag
         if(lag >= _correlation.MaxLag)
@@ -207,6 +215,7 @@ void BeatDetector::CalculateMaxLagValues(ColorSelection color, uint16_t* maxLag,
 uint16_t BeatDetector::CalculateBpmFromLagValue(uint16_t maxLag)
 {
     return (uint16_t)(60.0f / (_periodOfLag * ((float32_t)maxLag)));
+    // return ((200 - 60) / (_correlation.MaxLag - _correlation.MinLag)) * maxLag;
 }
 
 void BeatDetector::WriteResultToUart(ColorSelection color, CorrelationResult result)

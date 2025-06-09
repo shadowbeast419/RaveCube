@@ -68,6 +68,7 @@ UartController uart2;
 VoltageSignal vSignal;
 MovingAvgFilter movingAvgFilter;
 FFT fft;
+BeatDetector beatDetector;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -103,6 +104,7 @@ int main(void)
 	// SettingsController settingsCtrl(i2c);
 
 	ledCtrl->Init(&movingAvgFilter);
+	beatDetector.Init(&uart2, (uint32_t)SAMPLE_FREQ, (uint16_t)FFT_SAMPLE_COUNT);
 
 	RaveCubeCommand* raveCubeCommand[3];
 	FilterCommand filterCommand(&uart2, i2c, &movingAvgFilter);
@@ -118,8 +120,7 @@ int main(void)
 		raveCubeCommand[i]->Load();
 	}
 
-	BeatDetector beatDetector(&uart2, (uint32_t)SAMPLE_FREQ, (uint16_t)FFT_SAMPLE_COUNT);
-	beatDetector.EnableOutputToUart = true;
+	beatDetector.EnableOutputToUart = false;
 	beatDetector.UseAbsValueOfCorrelation = true;
 
 	CorrelationResult corrResult = {0};
@@ -131,16 +132,22 @@ int main(void)
 	bool startupIterationsComplete = false;
 	#endif
 
+	// Double-sized buffer for overlapping data
+	uint16_t adcBuffer[FFT_SAMPLE_COUNT * 2]; 
+
 	while (1)
 	{
-		if(ledCtrl->IsLedUpdateComplete())
-		{
-			ledCtrl->UpdateLEDColor();
-		}
-
 		if(adc1->IsConversionHalfComplete() || adc1->IsConversionComplete())
 		{
-			vSignal.UpdateAdcValues(adc1->GetAdcValues());
+			uint16_t overlapStartIndex = (uint16_t)(FFT_SAMPLE_COUNT * OVERLAP_FACTOR);
+
+			// Shift old data to make room for new samples (keeping 50% overlap)
+        	memmove(adcBuffer, &adcBuffer[overlapStartIndex], overlapStartIndex * sizeof(uint16_t));
+        
+        	// Append new ADC values into the buffer
+        	memcpy(&adcBuffer[overlapStartIndex], adc1->GetAdcValues(), overlapStartIndex * sizeof(uint16_t));
+
+			vSignal.UpdateAdcValues(adcBuffer);
 			fft.UpdateVoltageSignal(&vSignal, adc1->GetSampleFrequency());
 			fftResult = fft.CalculateFFT();
 
@@ -164,13 +171,17 @@ int main(void)
 			SendStreamingData();
 			#endif
 
-			corrResult = beatDetector.CalculateBeatsPerMinute(ledCtrl->GetCurrentUnfilteredBrightness());
+			corrResult = beatDetector.CalculateBeatsPerMinute(fftResult);
 			calcSuccessful = beatDetector.CalculateFilterLevels(corrResult, &calculatedFilterLevels);
 
 			if(calcSuccessful)
 			{
-				// raveCtrl.ChangeFilterOrder(updatedFilterLevels, false);
 				ledCtrl->SetColorFilterOrder(calculatedFilterLevels);
+			}
+
+			if(ledCtrl->IsLedUpdateComplete())
+			{
+				ledCtrl->UpdateLEDColor();
 			}
 
 			// raveCtrl.SendStreamingData();
