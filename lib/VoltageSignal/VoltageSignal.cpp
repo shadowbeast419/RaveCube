@@ -11,19 +11,21 @@ VoltageSignal::VoltageSignal()
 {
 #ifdef ENABLE_WINDOWING
 
-	float32_t cosValue = 0.0f;
+	// float32_t cosValue = 0.0f;
 
-	for(uint32_t i = 0; i < FFT_SAMPLE_COUNT; i++)
-	{
-		cosValue = 2.0f * (PI) * (i / (float32_t)(FFT_SAMPLE_COUNT - 1));
+	// for(uint32_t i = 0; i < FFT_SAMPLE_COUNT; i++)
+	// {
+	// 	cosValue = 2.0f * (PI) * (i / (float32_t)(FFT_SAMPLE_COUNT - 1));
 
-		// Blackman Harris window
-		_windowWeights[i] = 0.35875f + 0.48829f * arm_cos_f32(cosValue) + 0.14128f *
-				arm_cos_f32(cosValue * 2.0f) + 0.01168f * arm_cos_f32(cosValue * 3.0f);
+	// 	// Blackman Harris window
+	// 	_windowWeights[i] = 0.35875f + 0.48829f * arm_cos_f32(cosValue) + 0.14128f *
+	// 			arm_cos_f32(cosValue * 2.0f) + 0.01168f * arm_cos_f32(cosValue * 3.0f);
 
-		// Hanning window
-		//_windowWeights[i] = 0.5f * (1.0f - arm_cos_f32(2.0f * (PI) * (i / (float)(FFT_SAMPLE_COUNT - 1))));
-	}
+	// 	// Hanning window
+	// 	//_windowWeights[i] = 0.5f * (1.0f - arm_cos_f32(2.0f * (PI) * (i / (float)(FFT_SAMPLE_COUNT - 1))));
+	// }
+
+	arm_hanning_f32(_windowWeights, FFT_SAMPLE_COUNT);
 
 #endif
 }
@@ -78,7 +80,11 @@ float32_t VoltageSignal::GetMeanValue()
 
 float32_t* VoltageSignal::GetSignal()
 {
+
 #ifdef ENABLE_WINDOWING
+
+
+
 	for(uint16_t i = 0; i < FFT_SAMPLE_COUNT; i++)
 	{
 		_voltageValues[i] = _voltageValues[i] * _windowWeights[i];

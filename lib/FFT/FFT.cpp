@@ -26,7 +26,7 @@ FFT_Result* FFT::CalculateFFT()
 	float32_t* signalArray = _voltageSignal->GetSignal();
 	uint16_t hzPerSample = HZ_PER_SAMPLE;
 
-	arm_rfft_fast_init_256_f32(&_rfftFastInstance);
+	arm_rfft_fast_init_512_f32(&_rfftFastInstance);
 	arm_rfft_fast_f32(&_rfftFastInstance, signalArray, _spectrumBuffer, 0);
 	arm_cmplx_mag_f32(_spectrumBuffer, _absSpectrumBuffer, fftBinCount);
 

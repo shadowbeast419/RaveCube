@@ -7,9 +7,9 @@ class FilterLevelsVoltage
 {
 	public:
 		static const uint16_t FilterLevelsMin = 3;
-		static const uint16_t FilterLevelsMax = 150;
-		static const uint16_t FilterLevelVoltageInit = FilterLevelsMax - 1;
-		static const uint16_t FilterLevelPeakVoltageInit = 100;
+		static const uint16_t FilterLevelsMax = 60;
+		static const uint16_t FilterLevelVoltageInit = (FilterLevelsMax / 2) - 1;
+		static const uint16_t FilterLevelPeakVoltageInit = FilterLevelsMax - 1;
 
 		uint16_t Voltage = FilterLevelVoltageInit;
 		uint16_t PeakVoltage = FilterLevelPeakVoltageInit;

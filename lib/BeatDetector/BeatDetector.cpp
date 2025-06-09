@@ -1,10 +1,18 @@
 
 
-#include <main.hpp>
 #include <BeatDetector.hpp>
 
-BeatDetector::BeatDetector(UartController* uartCtrl, 
-    uint32_t sampleFrequency, uint16_t sampleCount)
+BeatDetector::BeatDetector()
+{
+
+}
+
+BeatDetector::~BeatDetector()
+{
+	// TODO Auto-generated destructor stub
+}
+
+void BeatDetector::Init(UartController* uartCtrl, uint32_t sampleFrequency, uint16_t sampleCount)
 {
     _uartCtrl = uartCtrl;
     _correlation.Init();
@@ -112,10 +120,10 @@ CorrelationResult BeatDetector::AddElementToFilter(CorrelationResult corrResult)
 }
 
 // BPM of 0 means no result
-CorrelationResult BeatDetector::CalculateBeatsPerMinute(RgbLedBrightness rgbBrightness)
+CorrelationResult BeatDetector::CalculateBeatsPerMinute(FFT_Result* fftResult)
 {
     // Adds new FFT Samples to the RingBuffer   
-    _correlation.AddRgbBrightness(rgbBrightness);
+    _correlation.AddFftResult(fftResult);
 
     CorrelationResult corrResult = {0};
     BeatsPerMinute bpm = {0};

@@ -33,7 +33,7 @@ private:
 	arm_rfft_fast_instance_f32		_rfftFastInstance;
 	FFT_Result 						_fftResults[FFT_SAMPLE_COUNT / 2];
 	float32_t 						_spectrumBuffer[FFT_SAMPLE_COUNT];
-	float32_t 						_absSpectrumBuffer[FFT_SAMPLE_COUNT];
+	float32_t 						_absSpectrumBuffer[FFT_SAMPLE_COUNT / 2];
 };
 
 

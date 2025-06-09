@@ -80,19 +80,19 @@ void Error_Handler(void);
 /* USER CODE BEGIN Private defines */
 
 // Removes FFT constants for values other than 1024
-#define FFT_SAMPLE_COUNT 256
+#define FFT_SAMPLE_COUNT 512
 
 // Could lead to aliasing effects because the filter has a cutoff frequency of 20kHz
 // (12288 Hz = 12 * 1024 Samples)
-#define SAMPLE_FREQ 24576
+#define SAMPLE_FREQ 40000
 #define HZ_PER_SAMPLE ((uint16_t)(SAMPLE_FREQ / FFT_SAMPLE_COUNT))
-#define CUT_OFF_FREQUENCY 10000
+#define CUT_OFF_FREQUENCY 6000
 #define MAX_FFT_RESULT_INDEX ((uint16_t)(CUT_OFF_FREQUENCY / HZ_PER_SAMPLE))
 
 // For usage with RaveCubeGUI
 // #define VERBOSE_MODE
-
-// #define ENABLE_WINDOWING
+#define ENABLE_WINDOWING
+#define OVERLAP_FACTOR 0.5f
 // #define ENABLE_STARTUP_SEQUENCE
 
 #define COMMAND_COUNT 3

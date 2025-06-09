@@ -9,7 +9,7 @@
 #include <FFT.hpp>
 #include <string>
 
-#define FILTER_ORDER_MAX 3
+#define FILTER_ORDER_MAX 11
 
 struct BeatsPerMinute
 {
@@ -23,24 +23,27 @@ struct CorrelationResult
     BeatsPerMinute Bpm;
     CorrelationCoefficients CorrCoeff;
 };
+
 struct RingBufferNodeBPM
 {
 	struct RingBufferNodeBPM* pPrev;
 	struct RingBufferNodeBPM* pNext;
     CorrelationResult result;
 };
+
+
 class BeatDetector
 {
     public:
-        BeatDetector(UartController* uartCtrl, 
-            uint32_t sampleFrequency, uint16_t sampleCount);
-        ~BeatDetector();
-
-        CorrelationResult CalculateBeatsPerMinute(RgbLedBrightness rgbBrightness);
+        BeatDetector();
+        virtual ~BeatDetector();
+        
+        void Init(UartController* uartCtrl, uint32_t sampleFrequency, uint16_t sampleCount);
+        CorrelationResult CalculateBeatsPerMinute(FFT_Result* fftResult);
         void GetBpmBoundaries(uint16_t* minValue, uint16_t* maxValue);
         bool CalculateFilterLevels(CorrelationResult result, FilterLevelsColor* filterLevels);
 
-        bool                            EnableOutputToUart = true;
+        bool                            EnableOutputToUart = false;
         bool                            UseAbsValueOfCorrelation = false;
 
     private:
@@ -60,7 +63,7 @@ class BeatDetector
         RingBufferNodeBPM*              _currentNode = NULL;
 
         // Should be <1.0 with Max MvgAvg Filter Order < 128 (otherwise too much lightning :D)
-        float32_t                       _bpmToFilterSensibility = 0.7f;
+        float32_t                       _bpmToFilterSensibility = 1.0f;
 };
 
 #endif
