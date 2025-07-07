@@ -132,56 +132,76 @@ int main(void)
 	bool startupIterationsComplete = false;
 	#endif
 
-	// Double-sized buffer for overlapping data
-	uint16_t adcBuffer[FFT_SAMPLE_COUNT * 2]; 
+	uint16_t ringBuffer[RING_BUFFER_SIZE];
+	uint64_t writeIndex = 0;
+	uint32_t sampleCount = 0;
 
 	while (1)
 	{
 		if(adc1->IsConversionHalfComplete() || adc1->IsConversionComplete())
 		{
-			uint16_t overlapStartIndex = (uint16_t)(FFT_SAMPLE_COUNT * OVERLAP_FACTOR);
+			uint16_t* newSamples = adc1->GetAdcValues();
 
-			// Shift old data to make room for new samples (keeping 50% overlap)
-        	memmove(adcBuffer, &adcBuffer[overlapStartIndex], overlapStartIndex * sizeof(uint16_t));
-        
-        	// Append new ADC values into the buffer
-        	memcpy(&adcBuffer[overlapStartIndex], adc1->GetAdcValues(), overlapStartIndex * sizeof(uint16_t));
-
-			vSignal.UpdateAdcValues(adcBuffer);
-			fft.UpdateVoltageSignal(&vSignal, adc1->GetSampleFrequency());
-			fftResult = fft.CalculateFFT();
-
-			#ifdef ENABLE_STARTUP_SEQUENCE
-
-			ledCtrl->CalculateBrightness(fftResult, vSignal.GetRMSValue(), startupIterationsComplete);
-
-			iterationCounter++;
-
-			// At this point the Filters have a valid result
-			if(iterationCounter > FilterLevelsVoltage::FilterLevelsMax * 2)
-				startupIterationsComplete = true;
-
-			#endif
-			
-			#ifndef ENABLE_STARTUP_SEQUENCE
-			ledCtrl->CalculateBrightness(fftResult, vSignal.GetMeanValue(), true);	
-			#endif
-			
-			#ifdef VERBOSE_MODE
-			SendStreamingData();
-			#endif
-
-			corrResult = beatDetector.CalculateBeatsPerMinute(fftResult);
-			calcSuccessful = beatDetector.CalculateFilterLevels(corrResult, &calculatedFilterLevels);
-
-			if(calcSuccessful)
+			// Append new samples to ring buffer
+			for (int i = 0; i < FFT_SAMPLE_COUNT; i++)
 			{
-				ledCtrl->SetColorFilterOrder(calculatedFilterLevels);
+				ringBuffer[writeIndex % RING_BUFFER_SIZE] = newSamples[i];
+				writeIndex++;
 			}
 
-			if(ledCtrl->IsLedUpdateComplete())
+			sampleCount += FFT_SAMPLE_COUNT;
+
+			// Check if enough new samples have accumulated for next window
+			while (sampleCount >= STEP_SIZE)
 			{
-				ledCtrl->UpdateLEDColor();
+				// Extract a full window of N samples for processing
+				uint16_t window[FFT_SAMPLE_COUNT];
+				uint32_t startIndex = (writeIndex - sampleCount) % RING_BUFFER_SIZE;
+
+				for (int i = 0; i < FFT_SAMPLE_COUNT; i++)
+				{
+					window[i] = ringBuffer[(startIndex + i) % RING_BUFFER_SIZE];
+				}
+
+				// Process window here (FFT, loudness, etc.)
+				vSignal.UpdateAdcValues(window);
+				fft.UpdateVoltageSignal(&vSignal, adc1->GetSampleFrequency());
+				fftResult = fft.CalculateFFT();
+
+				#ifdef ENABLE_STARTUP_SEQUENCE
+
+				ledCtrl->CalculateBrightness(fftResult, vSignal.GetRMSValue(), startupIterationsComplete);
+
+				iterationCounter++;
+
+				// At this point the Filters have a valid result
+				if(iterationCounter > FilterLevelsVoltage::FilterLevelsMax * 2)
+					startupIterationsComplete = true;
+
+				#endif
+				
+				#ifndef ENABLE_STARTUP_SEQUENCE
+				ledCtrl->CalculateBrightness(fftResult, vSignal.GetRMSValue(), true);	
+				#endif
+				
+				#ifdef VERBOSE_MODE
+				SendStreamingData();
+				#endif
+
+				corrResult = beatDetector.CalculateBeatsPerMinute(fftResult);
+				calcSuccessful = beatDetector.CalculateFilterLevels(corrResult, &calculatedFilterLevels);
+
+				if(calcSuccessful)
+				{
+					ledCtrl->SetColorFilterOrder(calculatedFilterLevels);
+				}
+
+				if(ledCtrl->IsLedUpdateComplete())
+				{
+					ledCtrl->UpdateLEDColor();
+				}
+
+				sampleCount -= STEP_SIZE;  // Advance by step size
 			}
 
 			// raveCtrl.SendStreamingData();

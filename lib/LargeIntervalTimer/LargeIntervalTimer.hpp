@@ -16,7 +16,7 @@ class LargeIntervalTimer
 {
 private:
 	TIM_HandleTypeDef 			_timHandle;
-	float32_t 					_intervalSeconds = 2.5f;
+	float32_t 					_intervalSeconds = 1.5f;
 	HAL_StatusTypeDef HAL_TIM_Base_Init(TIM_HandleTypeDef *htim);
 	void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base);
 

@@ -133,20 +133,22 @@ CorrelationResult BeatDetector::CalculateBeatsPerMinute(FFT_Result* fftResult)
 
     uint16_t maxLagIndex = 0;
     float32_t maxLagValue = 0.0f;
+    float32_t lagValueThreshold = 0.35f;
+    uint16_t defaultBpmValue = 100;
 
     // BPM Calculations for Red color
     CalculateMaxLagValues(Red, &maxLagIndex, &maxLagValue);
-    bpm.Red = CalculateBpmFromLagValue(maxLagIndex);
+    bpm.Red = maxLagValue < lagValueThreshold ? defaultBpmValue : CalculateBpmFromLagValue(maxLagIndex);
     corrResult.CorrCoeff.Red = maxLagValue;
 
     // BPM Calculations for Green color
     CalculateMaxLagValues(Green, &maxLagIndex, &maxLagValue);
-    bpm.Green = CalculateBpmFromLagValue(maxLagIndex);
+    bpm.Green = maxLagValue < lagValueThreshold ? defaultBpmValue : CalculateBpmFromLagValue(maxLagIndex);
     corrResult.CorrCoeff.Green = maxLagValue;
 
     // BPM Calculations for Blue color
     CalculateMaxLagValues(Blue, &maxLagIndex, &maxLagValue);
-    bpm.Blue = CalculateBpmFromLagValue(maxLagIndex);
+    bpm.Blue = maxLagValue < lagValueThreshold ? defaultBpmValue : CalculateBpmFromLagValue(maxLagIndex);
     corrResult.CorrCoeff.Blue = maxLagValue;
 
     corrResult.Bpm = bpm;
@@ -272,7 +274,7 @@ bool BeatDetector::CalculateFilterLevels(CorrelationResult result, FilterLevelsC
 
     GetBpmBoundaries(&bpmMin, &bpmMax);
 
-    k = ((float32_t)FilterLevelsColor::FilterLevelsMin - (float32_t)FilterLevelsColor::FilterLevelsMax) / ((float32_t)bpmMax - (float32_t)bpmMin);
+    k = ((float32_t)(FilterLevelsColor::FilterLevelsMin - (float32_t)FilterLevelsColor::FilterLevelsMax)) / ((float32_t)bpmMax - (float32_t)bpmMin);
     d = (float32_t)FilterLevelsColor::FilterLevelsMin - ((float32_t)bpmMax * k);
 
     k = k * _bpmToFilterSensibility;

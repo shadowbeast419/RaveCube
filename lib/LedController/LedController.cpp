@@ -183,7 +183,7 @@ void LedController::CalculateBrightness(FFT_Result* fftResult, float32_t meanVol
 
 	if(_filteredPeakRmsVoltage > 0.0f)
 	{
-		voltageRatio = (_filteredMeanVoltage / _filteredPeakRmsVoltage) * _brightnessFactors.All;
+		voltageRatio = (_filteredMeanVoltage / _filteredPeakRmsVoltage);
 	}
 
 	HSVBrightness hsvParamsRed = CalculateHSVBrightness(fftResult, voltageRatio, Red);
@@ -201,9 +201,9 @@ void LedController::CalculateBrightness(FFT_Result* fftResult, float32_t meanVol
 	sumParams.Green = (rgbParamsRed.Green + rgbParamsGreen.Green + rgbParamsBlue.Green) / 3;
 	sumParams.Blue = (rgbParamsRed.Blue + rgbParamsGreen.Blue + rgbParamsBlue.Blue) / 3;
 
-	sumParams.Red = (uint16_t)(sumParams.Red * _brightnessFactors.Red);
-	sumParams.Green = (uint16_t)(sumParams.Green * _brightnessFactors.Green);
-	sumParams.Blue = (uint16_t)(sumParams.Blue * _brightnessFactors.Blue);
+	sumParams.Red = (uint16_t)((sumParams.Red * _brightnessFactors.Red) * _brightnessFactors.All);
+	sumParams.Green = (uint16_t)((sumParams.Green * _brightnessFactors.Green) * _brightnessFactors.All);
+	sumParams.Blue = (uint16_t)((sumParams.Blue * _brightnessFactors.Blue) * _brightnessFactors.All);
 
 	_currentUnfilteredBrightness = sumParams;
 

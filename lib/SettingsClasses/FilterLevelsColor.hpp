@@ -7,7 +7,7 @@ class FilterLevelsColor
 {
 	public:
 		static const uint16_t FilterLevelsMin = 3;
-		static const uint16_t FilterLevelsMax = 50;
+		static const uint16_t FilterLevelsMax = 100;
 		static const uint16_t FilterLevelsInit = FilterLevelsMax - 1;
 
 		uint16_t RedBrightness = FilterLevelsInit;

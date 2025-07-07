@@ -9,9 +9,9 @@ class BrightnessFactors : public RaveCubeSetting
 {
 	public:
 		float32_t Red = 3.25f;
-		float32_t Green = 1.55f;
+		float32_t Green = 1.25f;
 		float32_t Blue = 1.15f;
-		float32_t All = 1.5f;
+		float32_t All = 1.0f;
 
 		bool operator==(BrightnessFactors factors2)
 		{
